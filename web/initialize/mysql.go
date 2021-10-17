@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -9,14 +10,20 @@ import (
 	"log"
 	"os"
 	"time"
-	"uapply_go/user_web/global"
+	"uapply_go/web/global"
 )
 
 var err error
 
 // InitMysql gorm 连接mysql
 func InitMysql() error {
-	dsn := "root:root@tcp(121.40.193.220:3308)/mxshop_user_srv?charset=utf8&parseTime=True&loc=Local"
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
+		global.Conf.MysqlInfo.UserName,
+		global.Conf.MysqlInfo.Password,
+		global.Conf.MysqlInfo.Host,
+		global.Conf.MysqlInfo.Port,
+		global.Conf.MysqlInfo.DBName,
+	)
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		logger.Config{

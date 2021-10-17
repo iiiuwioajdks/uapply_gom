@@ -17,7 +17,7 @@ import (
 	"runtime/debug"
 	"strings"
 	"time"
-	"uapply_go/user_web/global"
+	"uapply_go/web/global"
 )
 
 var lg *zap.Logger

@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"go.uber.org/zap"
-	"uapply_go/user_web/global"
-	"uapply_go/user_web/initialize"
+	"uapply_go/web/global"
+	"uapply_go/web/initialize"
 )
 
 func main() {

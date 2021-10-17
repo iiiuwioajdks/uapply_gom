@@ -2,7 +2,7 @@ package initialize
 
 import (
 	"github.com/gin-gonic/gin"
-	"uapply_go/user_web/router"
+	"uapply_go/web/router"
 )
 
 // InitRouter 路由初始化

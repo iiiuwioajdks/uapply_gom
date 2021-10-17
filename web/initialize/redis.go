@@ -6,7 +6,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"time"
-	"uapply_go/user_web/global"
+	"uapply_go/web/global"
 )
 
 // InitRedis 连接redis

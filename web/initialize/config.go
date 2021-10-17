@@ -5,13 +5,13 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"uapply_go/user_web/global"
+	"uapply_go/web/global"
 )
 
 // ViperInit viper配置文件初始化
 func ViperInit() error {
 	Conf := &global.Conf
-	viper.SetConfigFile("user_web/config.yaml")
+	viper.SetConfigFile("web/config.yaml")
 	err := viper.ReadInConfig()
 	if err != nil {
 		return errors.Wrap(err, "setting init error")
