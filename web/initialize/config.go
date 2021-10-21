@@ -79,6 +79,7 @@ func ViperInit() error {
 				Group:  Conf.Group,
 			})
 			_ = json.Unmarshal([]byte(content), &global.Conf)
+			Init()
 			zap.S().Info(global.Conf)
 		},
 	})
