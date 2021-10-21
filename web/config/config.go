@@ -5,6 +5,11 @@ type ServerConf struct {
 	MysqlInfo  MysqlConf  `json:"mysql"`
 	RedisInfo  RedisConf  `json:"redis"`
 	LoggerInfo LoggerConf `json:"log"`
+	JwtInfo    JwtConf    `json:"jwt"`
+}
+
+type JwtConf struct {
+	SigningKey string `json:"key"`
 }
 
 type MysqlConf struct {
