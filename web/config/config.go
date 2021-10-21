@@ -1,32 +1,42 @@
 package config
 
 type ServerConf struct {
-	Port       int        `mapstructure:"port"`
-	MysqlInfo  MysqlConf  `mapstructure:"mysql"`
-	RedisInfo  RedisConf  `mapstructure:"redis"`
-	LoggerInfo LoggerConf `mapstructure:"log"`
+	Port       int        `json:"port"`
+	MysqlInfo  MysqlConf  `json:"mysql"`
+	RedisInfo  RedisConf  `json:"redis"`
+	LoggerInfo LoggerConf `json:"log"`
 }
 
 type MysqlConf struct {
-	Host     string `mapstructure:"host"`
-	UserName string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
-	DBName   string `mapstructure:"dbname"`
-	Port     int    `mapstructure:"port"`
+	Host     string `json:"host"`
+	UserName string `json:"user"`
+	Password string `json:"password"`
+	DBName   string `json:"dbname"`
+	Port     int    `json:"port"`
 }
 
 type RedisConf struct {
-	Host string `mapstructure:"host"`
-	Auth string `mapstructure:"auth"`
-	Port int    `mapstructure:"port"`
-	DB   int    `mapstructure:"db"`
+	Host string `json:"host"`
+	Auth string `json:"auth"`
+	Port int    `json:"port"`
+	DB   int    `json:"db"`
 }
 
 type LoggerConf struct {
-	Level    string `mapstructure:"level"`
-	Filename string `mapstructure:"filename"`
-	Mode     string `mapstructure:"mode"`
-	MaxSize  int    `mapstructure:"max_size"`
-	MaxAge   int    `mapstructure:"max_age"`
-	BackUp   int    `mapstructure:"max_backups"`
+	Level    string `json:"level"`
+	Filename string `json:"filename"`
+	Mode     string `json:"mode"`
+	MaxSize  int    `json:"max_size"`
+	MaxAge   int    `json:"max_age"`
+	BackUp   int    `json:"max_backups"`
+}
+
+type NacosConfig struct {
+	Host        string `mapstructure:"host"`
+	Port        int    `mapstructure:"port"`
+	User        string `mapstructure:"user"`
+	Pwd         string `mapstructure:"pwd"`
+	Group       string `mapstructure:"group"`
+	DataId      string `mapstructure:"dataid"`
+	NamespaceId string `mapstructure:"namespaceid"`
 }

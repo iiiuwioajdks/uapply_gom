@@ -1,8 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"go.uber.org/zap"
+	"os"
+	"os/signal"
+	"syscall"
 	"uapply_go/web/global"
 	"uapply_go/web/initialize"
 )
@@ -33,8 +35,11 @@ func main() {
 	// 启动服务
 	port := global.Conf.Port
 	zap.S().Infof("启动服务器,端口: %d", port)
-	err = Router.Run(fmt.Sprintf(":%d", port))
-	if err != nil {
-		zap.S().Panic("启动失败:", err.Error())
-	}
+
+	go func() {
+		Router.Run(":9090")
+	}()
+	quit := make(chan os.Signal)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM) // ctrl+c 和 kill ，对应win和linux
+	<-quit
 }
