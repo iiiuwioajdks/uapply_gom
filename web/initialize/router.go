@@ -13,6 +13,6 @@ func InitRouter() *gin.Engine {
 
 	ApiRouter := Router.Group("/uapply/v1")
 	router.InitUserRouter(ApiRouter)
-
+	router.InitAdminRouter(ApiRouter)
 	return Router
 }
