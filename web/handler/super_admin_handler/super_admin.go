@@ -1,4 +1,4 @@
-package handler
+package super_admin_handler
 
 import (
 	"uapply_go/web/forms"
@@ -6,8 +6,8 @@ import (
 	"uapply_go/web/models"
 )
 
-// CreateSAdmin 创建超级管理员
-func CreateSAdmin(csa *forms.CreateSAdmin) error {
+// Create 创建超级管理员
+func Create(csa *forms.CreateSAdmin) error {
 	// 存 Organization 的信息
 	orgModel := models.Organization{
 		OrganizationName: csa.OrganizationName,
