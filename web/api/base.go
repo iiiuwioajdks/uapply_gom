@@ -14,6 +14,7 @@ const (
 )
 
 var codeMsg = map[CodeType]string{
+	CodeSuccess:      "success",
 	CodeInvalidParam: "参数有误",
 	CodeSystemBusy:   "系统繁忙",
 }
@@ -24,6 +25,7 @@ func (c CodeType) Msg() string {
 	}
 	return "状态码获取出错"
 }
+
 func Success(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, gin.H{
 		"code": CodeSuccess,
@@ -36,5 +38,13 @@ func Fail(c *gin.Context, code CodeType) {
 	c.JSON(http.StatusOK, gin.H{
 		"code": code,
 		"msg":  code.Msg(),
+	})
+}
+
+func FailWithErr(c *gin.Context, code CodeType, err string) {
+	c.JSON(http.StatusOK, gin.H{
+		"code": code,
+		"msg":  code.Msg(),
+		"err":  err,
 	})
 }

@@ -18,7 +18,7 @@ func Create(c *gin.Context) {
 	err := super_admin_handler.Create(&csa)
 	if err != nil {
 		zap.S().Info(err)
-		api.Fail(c, api.CodeSystemBusy)
+		api.FailWithErr(c, api.CodeInvalidParam, err.Error())
 		return
 	}
 	api.Success(c, nil)

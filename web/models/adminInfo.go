@@ -34,6 +34,6 @@ type OrganizationBase struct {
 type Organization struct {
 	// 直接用id作为organizationId，这样可以索引最优化
 	OrganizationBase
-	OrganizationName string `gorm:"type:varchar(100);not null"`
+	OrganizationName string `gorm:"unique;type:varchar(100);not null"`
 	Department       []Department
 }
