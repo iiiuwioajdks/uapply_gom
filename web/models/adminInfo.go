@@ -36,4 +36,5 @@ type Organization struct {
 	OrganizationBase
 	OrganizationName string `gorm:"unique;type:varchar(100);not null"`
 	Department       []Department
+	Send             int32 `gorm:"type:int comment '短信发送量，用于对组织收费'"`
 }
