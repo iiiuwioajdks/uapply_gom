@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"uapply_go/web/global"
-	"uapply_go/web/models"
+	jwt2 "uapply_go/web/models/jwt"
 )
 
 type JWT struct {
@@ -35,6 +35,7 @@ func JWTAuth() gin.HandlerFunc {
 			return
 		}
 		// set 一些东西
+		c.Set("claim", claim)
 		zap.S().Info(claim)
 		c.Next()
 	}
@@ -47,7 +48,7 @@ func NewJWT() *JWT {
 }
 
 // CreateToken 生成jwt
-func (j *JWT) CreateToken(claims models.DepClaims) (string, error) {
+func (j *JWT) CreateToken(claims jwt2.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(j.SigningKey)
 }
@@ -59,8 +60,8 @@ var (
 	TokenInvalid     = errors.New("Couldn't handle this token")
 )
 
-func (j *JWT) ParseToken(tokenString string) (*models.DepClaims, error) {
-	var cs models.DepClaims
+func (j *JWT) ParseToken(tokenString string) (*jwt2.Claims, error) {
+	var cs jwt2.Claims
 	_, err := jwt.ParseWithClaims(tokenString, &cs, func(token *jwt.Token) (interface{}, error) {
 		return []byte(global.Conf.JwtInfo.SigningKey), nil
 	})
