@@ -1,7 +1,6 @@
 package super_admin_handler
 
 import (
-	"context"
 	"uapply_go/web/forms"
 	"uapply_go/web/global"
 	"uapply_go/web/models"
@@ -9,7 +8,7 @@ import (
 
 // Create 创建超级管理员
 func Create(csa *forms.CreateSAdmin) error {
-	db := global.GetDB(context.Background())
+	db := global.DB
 	// 存 Organization 的信息
 	orgModel := models.Organization{
 		OrganizationName: csa.OrganizationName,

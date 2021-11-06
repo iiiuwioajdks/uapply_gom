@@ -9,7 +9,7 @@ import (
 )
 
 func Login(ctx context.Context, loginInfo *forms.Login) (error, *models.Department) {
-	db := global.GetDB(ctx)
+	db := global.DB
 	var admin models.Department
 	result := db.Where(&models.Department{Account: loginInfo.Account, Password: loginInfo.Password}).First(&admin)
 	if result.RowsAffected == 0 {
