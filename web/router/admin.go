@@ -10,7 +10,7 @@ import (
 func InitAdminRouter(router *gin.RouterGroup) {
 	adminr := router.Group("/dep").Use(middleware.JWTAuth())
 	{
-		adminr.PUT("/udpdep", admin.Update) // 根据部门id更新部门信息
+		adminr.PATCH("/udpdep", admin.Update) // 根据部门id更新部门信息
 		adminr.GET("/getdep", admin.Get)
 	}
 }
