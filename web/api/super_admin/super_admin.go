@@ -1,7 +1,9 @@
 package super_admin
 
 import (
+	"database/sql"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"uapply_go/web/api"
 	"uapply_go/web/forms"
@@ -42,7 +44,25 @@ func GetOrgDep(c *gin.Context) {
 
 // Delete 组织删除其下附属的某一个或多个部门
 func Delete(c *gin.Context) {
+	//获取部门id
+	depid, ok := c.Params.Get("depid")
+	if !ok {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
 
+	//转移到handler处理
+	err := super_admin_handler.DeleteDepartment(depid)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.Fail(c, api.CodeUserNotExist)
+			return
+		}
+		zap.S().Error("super_admin_handler.DeleteDepartment()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, depid)
 }
 
 // GetDepDetail 最高权限获取部门信息，包括账号密码，方便统一管理

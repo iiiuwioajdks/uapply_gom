@@ -1,6 +1,7 @@
 package super_admin_handler
 
 import (
+	"database/sql"
 	"uapply_go/web/forms"
 	"uapply_go/web/global"
 	"uapply_go/web/models"
@@ -32,5 +33,23 @@ func Create(csa *forms.CreateSAdmin) error {
 		return result.Error
 	}
 
+	return nil
+}
+
+func DeleteDepartment(depid string) error {
+	//获取数据库
+	db := global.DB
+	//数据库操作
+	result := db.Where("department_id = ?", depid).Delete(&models.Department{})
+
+	//如果数据库没有这个部门id
+	if result.RowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	//数据库的查询错误
+	if result.Error != nil {
+		return result.Error
+	}
 	return nil
 }
