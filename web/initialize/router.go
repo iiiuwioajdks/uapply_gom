@@ -11,8 +11,10 @@ func InitRouter() *gin.Engine {
 	Router := gin.New()
 	Router.Use(GinLogger(), GinRecovery(true), middleware.Cors())
 
-	ApiRouter := Router.Group("/uapply/v1")
+	ApiRouter := Router.Group("/uapply")
 	router.InitUserRouter(ApiRouter)
 	router.InitAdminRouter(ApiRouter)
+	router.InitSuperAdminRouter(ApiRouter)
+	router.InitCommonRouter(ApiRouter)
 	return Router
 }

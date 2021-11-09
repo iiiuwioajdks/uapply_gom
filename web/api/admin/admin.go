@@ -53,3 +53,8 @@ func Update(c *gin.Context) {
 func GetDetail(c *gin.Context) {
 
 }
+
+// Get 获取某一部门粗略的信息
+func Get(c *gin.Context) {
+
+}
