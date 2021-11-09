@@ -16,7 +16,7 @@ type JWT struct {
 
 func JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := c.Request.Header.Get("x-token")
+		token := c.Request.Header.Get("uapply-token")
 		if token == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"msg": "无携带token",

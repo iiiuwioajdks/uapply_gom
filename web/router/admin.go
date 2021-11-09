@@ -13,6 +13,9 @@ func InitAdminRouter(router *gin.RouterGroup) {
 	AdminWithJwt := router.Group("/admin").Use(middleware.JWTAuth())
 	SuperAdmin := router.Group("/admin").Use(middleware.JWTAuth(), middleware.SupAdmin())
 	{
+		// ugroup是完全无条件的请求路由，进来就给
+		// AdminWithJwt必须要携带token
+		// SuperAdmin 必须要携带token且有管理员权限
 		// Post 和 Put 接受表单参数
 		uGroup.POST("/superadmin", super_admin.Create) // 超级管理员（组织）的创建,该接口不对外暴露，由后端人员操作
 		SuperAdmin.POST("/admin", admin.Create)        // 部门（admin）的创建

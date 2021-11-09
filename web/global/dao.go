@@ -16,3 +16,5 @@ var DB *gorm.DB
 func GetNewDB(ctx context.Context) *gorm.DB {
 	return DB.WithContext(ctx)
 }
+
+// https://gorm.io/zh_CN/docs/method_chaining.html 进行详细讲解

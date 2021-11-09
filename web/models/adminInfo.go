@@ -31,10 +31,11 @@ type OrganizationBase struct {
 }
 
 // Organization 组织表
+// 一个组织有多个部门
 type Organization struct {
 	// 直接用id作为organizationId，这样可以索引最优化
 	OrganizationBase
-	OrganizationName string `gorm:"unique;type:varchar(100);not null"`
-	Department       []Department
-	Send             int32 `gorm:"type:int comment '短信发送量，用于对组织收费'"`
+	OrganizationName string       `gorm:"unique;type:varchar(100);not null"`
+	Department       []Department // 1对多
+	Send             int32        `gorm:"type:int comment '短信发送量，用于对组织收费'"`
 }
