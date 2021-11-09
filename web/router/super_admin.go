@@ -8,6 +8,7 @@ import (
 )
 
 func InitSuperAdminRouter(router *gin.RouterGroup) {
+	// token 认证，组织认证
 	SuperAdmin := router.Group("/org").Use(middleware.JWTAuth(), middleware.SupAdmin())
 	{
 		// 超级管理员路由

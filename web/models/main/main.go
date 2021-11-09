@@ -30,6 +30,7 @@ func main() {
 		Logger: newLogger,
 	})
 
+	// 建表语句
 	db.AutoMigrate(&models.Department{})
 	db.AutoMigrate(&models.Organization{})
 }

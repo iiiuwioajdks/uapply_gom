@@ -14,7 +14,23 @@ import (
 
 // Create 管理员（部门）的创建
 func Create(c *gin.Context) {
-
+	// 绑定参数
+	var req forms.AdminReq
+	c.ShouldBindJSON(&req)
+	// 判断一下参数是否正确
+	if req.DepartmentName == "" || req.Account == "" || req.Password == "" {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+	// 转到handler去处理
+	// 创建部门，给的role肯定是0
+	err := admin_handler.CreateDep(&req)
+	if err != nil {
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	// 返回给前端
+	api.Success(c, "创建部门成功")
 }
 
 // Login 组织和部门都需要登录，但是组织和部门的身份由表中的role决定
@@ -25,7 +41,7 @@ func Login(c *gin.Context) {
 		api.Fail(c, api.CodeInvalidParam)
 		return
 	}
-	err, admin := admin_handler.Login(context.Background(), &loginInfo)
+	admin, err := admin_handler.Login(context.Background(), &loginInfo)
 	if errors.Is(err, errInfo.ErrUserNotFind) {
 		api.Fail(c, api.CodeUserNotExist)
 		return

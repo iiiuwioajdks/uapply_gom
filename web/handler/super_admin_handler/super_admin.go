@@ -21,6 +21,7 @@ func Create(csa *forms.CreateSAdmin) error {
 	// 存 Organization 的信息 到department表，作用是存储账号密码，方便登录查询
 	csaModel := models.Department{
 		OrganizationID: orgModel.OrganizationID,
+		// name "-admin"
 		DepartmentName: orgModel.OrganizationName + "-admin",
 		Account:        csa.Account,
 		Password:       csa.Password,
