@@ -76,5 +76,32 @@ func Delete(c *gin.Context) {
 
 // GetDepDetail 最高权限获取部门信息，包括账号密码，方便统一管理
 func GetDepDetail(c *gin.Context) {
+	// 获取部门的ID
+	depid, ok := c.Params.Get("depid")
+	if !ok {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
 
+	// 获取token信息
+	claim, ok := c.Get("claim")
+	if !ok {
+		// 调试信息 可删
+		fmt.Println(claim)
+	}
+	claimInfo := claim.(*jwt.Claims)
+
+	// 转移到handler处理
+	info, err := super_admin_handler.ShowConcreteDepartInfo(depid, claimInfo.OrganizationID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.Fail(c, api.CodeInvalidParam)
+			return
+		}
+		zap.S().Error("super_admin_handler.ShowConcreteDepartInfo()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	// 返回
+	api.Success(c, info)
 }

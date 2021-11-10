@@ -55,3 +55,22 @@ func DeleteDepartment(depid string, orgid int) error {
 	}
 	return nil
 }
+
+func ShowConcreteDepartInfo(depid string, orgid int) (*forms.AdminReq, error) {
+	// 获取DB
+	db := global.DB
+
+	// 返回变量的声明
+	departInfo := new(forms.AdminReq)
+
+	// 数据库操作
+	// Find 返回的是影响 不是错误（err）
+	result := db.Table("department").Where("department_id = ?", depid).Where("organization_id = ? and role = 0", orgid).Find(departInfo)
+	if result.RowsAffected == 0 {
+		// 可能是这个部门不在这个组织
+		// 部门id错误
+		// 不要把超级管理员的信息展示
+		return nil, sql.ErrNoRows
+	}
+	return departInfo, nil
+}
