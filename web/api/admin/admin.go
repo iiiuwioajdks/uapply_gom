@@ -17,13 +17,17 @@ func Create(c *gin.Context) {
 	// 绑定参数
 	var req forms.AdminReq
 	c.ShouldBindJSON(&req)
+
+	// 获取并绑定当前的 OrganizationID, 防止篡改
+	claims, _ := c.Get("claim")
+	claimsInfo := claims.(*jwt2.Claims)
+	req.OrganizationID = claimsInfo.OrganizationID
 	// 判断一下参数是否正确
 	if req.DepartmentName == "" || req.Account == "" || req.Password == "" {
 		api.Fail(c, api.CodeInvalidParam)
 		return
 	}
 	// 转到handler去处理
-	// 创建部门，给的role肯定是0
 	err := admin_handler.CreateDep(&req)
 	if err != nil {
 		api.Fail(c, api.CodeSystemBusy)

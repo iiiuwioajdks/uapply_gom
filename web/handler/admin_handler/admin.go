@@ -23,9 +23,11 @@ func CreateDep(req *forms.AdminReq) error {
 	db := global.DB
 	// 给model添加参数值
 	var dep models.Department
+	dep.OrganizationID = uint(req.OrganizationID)
 	dep.DepartmentName = req.DepartmentName
 	dep.Account = req.Account
 	dep.Password = req.Password
+	// 创建部门，给的role肯定是0
 	dep.Role = 0
 	// 存进数据库
 	result := db.Save(&dep)
