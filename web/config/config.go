@@ -1,12 +1,13 @@
 package config
 
 type ServerConf struct {
-	Port       int        `json:"port" mapstructure:"port"`
-	MysqlInfo  MysqlConf  `json:"mysql" mapstructure:"mysql"`
-	RedisInfo  RedisConf  `json:"redis" mapstructure:"redis"`
-	LoggerInfo LoggerConf `json:"log" mapstructure:"log"`
-	JwtInfo    JwtConf    `json:"jwt" mapstructure:"jwt"`
-	WXInfo     WxConf     `json:"wx_info" mapstructure:"wx"`
+	Port        int         `json:"port" mapstructure:"port"`
+	MysqlInfo   MysqlConf   `json:"mysql" mapstructure:"mysql"`
+	RedisInfo   RedisConf   `json:"redis" mapstructure:"redis"`
+	LoggerInfo  LoggerConf  `json:"log" mapstructure:"log"`
+	JwtInfo     JwtConf     `json:"jwt" mapstructure:"jwt"`
+	WXInfo      WxConf      `json:"wx_info" mapstructure:"wx"`
+	InterWxInfo InterWxConf `mapstructure:"interWx"`
 }
 
 type JwtConf struct {
@@ -38,6 +39,11 @@ type LoggerConf struct {
 }
 
 type WxConf struct {
+	Appid  string `mapstructure:"appID"`
+	Secret string `mapstructure:"secret"`
+}
+
+type InterWxConf struct {
 	Appid  string `mapstructure:"appID"`
 	Secret string `mapstructure:"secret"`
 }

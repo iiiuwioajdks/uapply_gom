@@ -37,4 +37,5 @@ func main() {
 	db.AutoMigrate(&models.UserWxInfo{})
 	db.AutoMigrate(&models.UserRegister{})
 	db.AutoMigrate(&models.UserEnroll{})
+	db.AutoMigrate(&models.Interviewers{})
 }

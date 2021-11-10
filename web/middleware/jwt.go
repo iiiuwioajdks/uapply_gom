@@ -41,7 +41,7 @@ func JWTAuth() gin.HandlerFunc {
 	}
 }
 
-// WXJWTAuth 微信小程序生成token
+// WXJWTAuth 微信小程序用户生成token
 func WXJWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.Request.Header.Get("uapply-token")
@@ -81,7 +81,7 @@ func (j *JWT) CreateToken(claims jwt2.Claims) (string, error) {
 	return token.SignedString(j.SigningKey)
 }
 
-// CreateWXToken 生成jwt
+// CreateWXToken 微信用户生成jwt
 func (j *JWT) CreateWXToken(claims jwt2.WXClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(j.SigningKey)

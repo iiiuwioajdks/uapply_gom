@@ -12,6 +12,7 @@ func InitAdminRouter(router *gin.RouterGroup) {
 	adminr := router.Group("/dep").Use(middleware.JWTAuth())
 	{
 		// 首先需要判断 num 的值，只能为1和2，1是第一轮面试，2 是第二轮面试
+		adminr.POST("/interviewer/add")       // 增加面试官
 		adminr.POST("/interview/sms/:num")    // 发送第n轮面试短信
 		adminr.POST("/interview/email/:num")  // 发送第n轮面试邮件
 		adminr.POST("/interview/pass/:num")   // 通过第n轮面试
@@ -27,5 +28,7 @@ func InitAdminRouter(router *gin.RouterGroup) {
 		adminr.GET("/getuser/reviewed/:num") // 部门获取第n轮已面试成员
 		adminr.GET("/getuser/enroll")        // 部门获取自己的通过部员
 		adminr.GET("/getuser/info")          // 获取本部门男女人数，报名人数信息
+
+		adminr.DELETE("/interviewer/del") // 删除面试官
 	}
 }
