@@ -53,6 +53,7 @@ func Delete(c *gin.Context) {
 		return
 	}
 
+	// 前面的中间件只是会判断他已登录和是超级管理者
 	// 组织删除部门，需要先判断一下是否属于本组织，防止篡改
 	claim, ok := c.Get("claim")
 	if !ok {
@@ -60,7 +61,7 @@ func Delete(c *gin.Context) {
 	}
 	claimInfo := claim.(*jwt.Claims)
 	//转移到handler处理
-	err := super_admin_handler.DeleteDepartment(depid, claimInfo.Role)
+	err := super_admin_handler.DeleteDepartment(depid, claimInfo.OrganizationID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			api.Fail(c, api.CodeInvalidParam)
