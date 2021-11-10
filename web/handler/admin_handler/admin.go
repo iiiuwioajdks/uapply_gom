@@ -18,21 +18,44 @@ func Login(ctx context.Context, loginInfo *forms.Login) (*models.Department, err
 	return &admin, nil
 }
 
+// CreateDep 创建部门
 func CreateDep(req *forms.AdminReq) error {
 	// 拿取db
 	db := global.DB
 	// 给model添加参数值
 	var dep models.Department
-	dep.OrganizationID = uint(req.OrganizationID)
-	dep.DepartmentName = req.DepartmentName
-	dep.Account = req.Account
-	dep.Password = req.Password
-	// 创建部门，给的role肯定是0
-	dep.Role = 0
+	bindDepModel(req, &dep)
 	// 存进数据库
 	result := db.Save(&dep)
 	if result.Error != nil {
 		return result.Error
 	}
 	return nil
+}
+
+// UpdateDep 更新部门信息
+// 返回值第一个参数为 RowsAffected
+func UpdateDep(req *forms.AdminReq) (rowsAffected int64, err error) {
+	db := global.DB
+	// 给 Model 绑定参数
+	var dep models.Department
+	bindDepModel(req, &dep)
+	//更新 Department 数据
+	result := db.Model(&dep).Updates(&dep)
+	if result.Error != nil {
+		err = result.Error
+	}
+	rowsAffected = result.RowsAffected
+	return
+}
+
+// bindDepModel 给 Department 绑定参数
+func bindDepModel(req *forms.AdminReq, dep *models.Department) {
+	dep.DepartmentID = uint(req.DepartmentID)
+	dep.OrganizationID = uint(req.OrganizationID)
+	dep.DepartmentName = req.DepartmentName
+	dep.Account = req.Account
+	dep.Password = req.Password
+	// 部门 role 肯定是0
+	dep.Role = 0
 }
