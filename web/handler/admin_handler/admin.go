@@ -42,8 +42,7 @@ func UpdateDep(req *forms.AdminReq) (rowsAffected int64, err error) {
 	// todo:不用单独拿出来，拿出来的应该是有共同特征的语句，不然会造成结构的混乱
 	bindDepModel(req, &dep)
 	//更新 Department 数据
-	// todo:Model里面的参数需要改成对应的类型，条件更新不要直接写实体，写成 &models.Department{}这种,然后后面跟where,不然可能会出现多余条件
-	// todo：更新单个应该用 update ，多列用 updates
+	// todo:Model里面的参数需要改成对应的类型，条件更新不要直接写实体，写成 &models.Department{}这种,然后后面跟where,不然可能会出现多余条件,确保一切在自己的掌控中是一种好习惯
 	result := db.Model(&dep).Updates(&dep)
 	// todo:api里面的东西拿来这里
 	if result.Error != nil {
