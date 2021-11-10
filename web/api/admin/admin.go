@@ -75,6 +75,7 @@ func Update(c *gin.Context) {
 
 	// 校验参数
 	// DepartmentID 主键自增，一定大于零
+	// todo:req.DepartmentID可以不用特判，如果查询出来没有值就说明参数错误
 	if req.DepartmentID <= 0 || req.DepartmentName == "" || req.Account == "" || req.Password == "" {
 		api.Fail(c, api.CodeInvalidParam)
 		return
@@ -89,8 +90,16 @@ func Update(c *gin.Context) {
 	req.OrganizationID = claimInfo.OrganizationID
 
 	// 转到 handle 去处理
+	// todo: 下面的判断应该交给handler去处理，然后返回个错误，看一下super_admin：create那个接口
+	/*
+		if rowsAffected == 0 {
+			api.Fail(c, api.CodeInvalidParam)
+			return
+		}
+	*/
 	rowsAffected, err := admin_handler.UpdateDep(&req)
 	if err != nil {
+		// todo:用zap输出一下日志，看一下其他接口怎么实现的，系统性错误不用返回前端
 		api.FailWithErr(c, api.CodeSystemBusy, err.Error())
 		return
 	}
