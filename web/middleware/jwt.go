@@ -41,6 +41,34 @@ func JWTAuth() gin.HandlerFunc {
 	}
 }
 
+// WXJWTAuth 微信小程序生成token
+func WXJWTAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := c.Request.Header.Get("uapply-token")
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"msg": "无携带token，请先登录",
+			})
+			c.Abort()
+			return
+		}
+
+		j := new(JWT)
+		claim, err := j.ParseWXToken(token)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"msg": err.Error(),
+			})
+			c.Abort()
+			return
+		}
+		// set 一些东西
+		c.Set("wxClaim", claim)
+		zap.S().Info(claim)
+		c.Next()
+	}
+}
+
 func NewJWT() *JWT {
 	return &JWT{
 		SigningKey: []byte(global.Conf.JwtInfo.SigningKey),
@@ -49,6 +77,12 @@ func NewJWT() *JWT {
 
 // CreateToken 生成jwt
 func (j *JWT) CreateToken(claims jwt2.Claims) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(j.SigningKey)
+}
+
+// CreateWXToken 生成jwt
+func (j *JWT) CreateWXToken(claims jwt2.WXClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(j.SigningKey)
 }
@@ -62,6 +96,30 @@ var (
 
 func (j *JWT) ParseToken(tokenString string) (*jwt2.Claims, error) {
 	var cs jwt2.Claims
+	_, err := jwt.ParseWithClaims(tokenString, &cs, func(token *jwt.Token) (interface{}, error) {
+		return []byte(global.Conf.JwtInfo.SigningKey), nil
+	})
+
+	if err != nil {
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+				return nil, TokenMalformed
+			} else if ve.Errors&jwt.ValidationErrorExpired != 0 {
+				return nil, TokenExpired
+			} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
+				return nil, TokenNotValidYet
+			} else {
+				return nil, TokenInvalid
+			}
+		} else {
+			return nil, TokenInvalid
+		}
+	}
+	return &cs, nil
+}
+
+func (j *JWT) ParseWXToken(tokenString string) (*jwt2.WXClaims, error) {
+	var cs jwt2.WXClaims
 	_, err := jwt.ParseWithClaims(tokenString, &cs, func(token *jwt.Token) (interface{}, error) {
 		return []byte(global.Conf.JwtInfo.SigningKey), nil
 	})

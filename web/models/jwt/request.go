@@ -8,3 +8,10 @@ type Claims struct {
 	OrganizationID int
 	DepartmentID   int
 }
+
+type WXClaims struct {
+	jwt.StandardClaims
+	Role       int
+	Openid     string
+	SessionKey string
+}

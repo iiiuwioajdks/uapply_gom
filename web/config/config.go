@@ -6,6 +6,7 @@ type ServerConf struct {
 	RedisInfo  RedisConf  `json:"redis" mapstructure:"redis"`
 	LoggerInfo LoggerConf `json:"log" mapstructure:"log"`
 	JwtInfo    JwtConf    `json:"jwt" mapstructure:"jwt"`
+	WXInfo     WxConf     `json:"wx_info" mapstructure:"wx"`
 }
 
 type JwtConf struct {
@@ -34,4 +35,9 @@ type LoggerConf struct {
 	MaxSize  int    `json:"max_size" mapstructure:"max_size"`
 	MaxAge   int    `json:"max_age" mapstructure:"max_age"`
 	BackUp   int    `json:"max_backups" mapstructure:"max_backups"`
+}
+
+type WxConf struct {
+	Appid  string `mapstructure:"appID"`
+	Secret string `mapstructure:"secret"`
 }

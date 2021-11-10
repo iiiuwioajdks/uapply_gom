@@ -16,5 +16,6 @@ func InitRouter() *gin.Engine {
 	router.InitAdminRouter(ApiRouter)
 	router.InitSuperAdminRouter(ApiRouter)
 	router.InitCommonRouter(ApiRouter)
+	router.InitInterviewerRouter(ApiRouter)
 	return Router
 }
