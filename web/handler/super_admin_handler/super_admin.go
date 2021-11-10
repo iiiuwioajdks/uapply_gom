@@ -36,13 +36,15 @@ func Create(csa *forms.CreateSAdmin) error {
 	return nil
 }
 
-func DeleteDepartment(depid string) error {
+func DeleteDepartment(depid string, orgid int) error {
 	//获取数据库
 	db := global.DB
 	//数据库操作
-	result := db.Where("department_id = ?", depid).Delete(&models.Department{})
+	result := db.Where("department_id = ?", depid).Where("organization_id = ? and role = 0", orgid).Delete(&models.Department{})
 
-	//如果数据库没有这个部门id
+	// 可能是组织id错了，要删别的组织的部门，直接退回说参数错误
+	// 也可能是部门id错了，那也一样是参数错误
+	// 如果删除的是组织，那更不行，要考虑全部，包括爬虫请求在内
 	if result.RowsAffected == 0 {
 		return sql.ErrNoRows
 	}
