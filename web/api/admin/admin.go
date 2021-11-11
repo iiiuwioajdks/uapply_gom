@@ -99,7 +99,11 @@ func Update(c *gin.Context) {
 	}
 	// 获取并绑定当前的 OrganizationID
 	claimInfo := claims.(*jwt2.Claims)
-	req.OrganizationID = claimInfo.OrganizationID
+	// 如果是管理员
+	if claimInfo.Role == 1 {
+		req.OrganizationID = claimInfo.OrganizationID
+	}
+	// 如果没有传给 DepartmentID ，说明是自己部门修改，
 	if req.DepartmentID == 0 {
 		req.DepartmentID = claimInfo.DepartmentID
 	}
