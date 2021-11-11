@@ -3,7 +3,6 @@ package admin
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -33,7 +32,7 @@ func Create(c *gin.Context) {
 	// 获取并绑定当前的 OrganizationID, 防止篡改
 	claims, ok := c.Get("claim")
 	if !ok {
-		fmt.Println(claims)
+		zap.S().Info(claims)
 	}
 	claimsInfo := claims.(*jwt2.Claims)
 	req.OrganizationID = claimsInfo.OrganizationID
@@ -80,6 +79,7 @@ func Login(c *gin.Context) {
 // Update 部门更新
 func Update(c *gin.Context) {
 	// 绑定参数
+	// todo: forms.AdminReq 后面没有跟 binding 的时候不进行绑定参数校验，不用判断 error
 	var req forms.AdminReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		zap.S().Info(err)
@@ -87,15 +87,19 @@ func Update(c *gin.Context) {
 		return
 	}
 
-	// 校验参数
-	if req.DepartmentName == "" || req.Account == "" || req.Password == "" {
+	//// 校验参数
+	//if req.DepartmentName == "" || req.Account == "" || req.Password == "" {
+	//	api.Fail(c, api.CodeInvalidParam)
+	//	return
+	//}
+	if req.DepartmentID == 0 {
 		api.Fail(c, api.CodeInvalidParam)
 		return
 	}
 
 	claims, ok := c.Get("claim")
 	if !ok {
-		fmt.Println(claims)
+		zap.S().Info(claims)
 	}
 	// 获取并绑定当前的 OrganizationID
 	claimInfo := claims.(*jwt2.Claims)

@@ -47,14 +47,20 @@ func UpdateDep(req *forms.AdminReq) error {
 	var dep models.Department
 	dep.DepartmentID = uint(req.DepartmentID)
 	dep.OrganizationID = uint(req.OrganizationID)
-	dep.DepartmentName = req.DepartmentName
-	dep.Account = req.Account
-	dep.Password = req.Password
+	if req.DepartmentName != "" {
+		dep.DepartmentName = req.DepartmentName
+	}
+	if req.Account != "" {
+		dep.Account = req.Account
+	}
+	if req.Password != "" {
+		dep.Password = req.Password
+	}
 	// 部门 role 肯定是0
 	dep.Role = 0
 
 	//更新 Department 数据
-	result := db.Model(&models.Department{}).Where("department_id = ?", dep.DepartmentID).Updates(&dep)
+	result := db.Model(&models.Department{}).Omit("organization_id", "department_id").Where("department_id = ? or organization_id = ?", dep.DepartmentID, dep.OrganizationID).Limit(1).Updates(&dep)
 	// rowsAffected 等于 0 说明参数有误
 	if result.RowsAffected == 0 {
 		return sql.ErrNoRows
