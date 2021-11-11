@@ -92,10 +92,6 @@ func Update(c *gin.Context) {
 	//	api.Fail(c, api.CodeInvalidParam)
 	//	return
 	//}
-	if req.DepartmentID == 0 {
-		api.Fail(c, api.CodeInvalidParam)
-		return
-	}
 
 	claims, ok := c.Get("claim")
 	if !ok {
@@ -104,6 +100,9 @@ func Update(c *gin.Context) {
 	// 获取并绑定当前的 OrganizationID
 	claimInfo := claims.(*jwt2.Claims)
 	req.OrganizationID = claimInfo.OrganizationID
+	if req.DepartmentID == 0 {
+		req.DepartmentID = claimInfo.DepartmentID
+	}
 
 	// 转到 handle 去处理
 	err := admin_handler.UpdateDep(&req)
