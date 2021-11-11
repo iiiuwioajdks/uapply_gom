@@ -2,9 +2,11 @@ package admin
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	"uapply_go/web/api"
 	"uapply_go/web/forms"
 	"uapply_go/web/global/errInfo"
@@ -17,7 +19,11 @@ import (
 func Create(c *gin.Context) {
 	// 绑定参数
 	var req forms.AdminReq
-	c.ShouldBindJSON(&req)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		zap.S().Info(err)
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
 
 	// 判断一下参数是否正确
 	if req.DepartmentName == "" || req.Account == "" || req.Password == "" {
@@ -25,13 +31,17 @@ func Create(c *gin.Context) {
 		return
 	}
 	// 获取并绑定当前的 OrganizationID, 防止篡改
-	claims, _ := c.Get("claim")
+	claims, ok := c.Get("claim")
+	if !ok {
+		fmt.Println(claims)
+	}
 	claimsInfo := claims.(*jwt2.Claims)
 	req.OrganizationID = claimsInfo.OrganizationID
 
 	// 转到handler去处理
 	err := admin_handler.CreateDep(&req)
 	if err != nil {
+		zap.S().Error("admin_handler.CreateDep()", zap.Error(err))
 		api.Fail(c, api.CodeSystemBusy)
 		return
 	}
@@ -71,12 +81,14 @@ func Login(c *gin.Context) {
 func Update(c *gin.Context) {
 	// 绑定参数
 	var req forms.AdminReq
-	c.ShouldBindJSON(&req)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		zap.S().Info(err)
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
 
 	// 校验参数
-	// DepartmentID 主键自增，一定大于零
-	// todo:req.DepartmentID可以不用特判，如果查询出来没有值就说明参数错误
-	if req.DepartmentID <= 0 || req.DepartmentName == "" || req.Account == "" || req.Password == "" {
+	if req.DepartmentName == "" || req.Account == "" || req.Password == "" {
 		api.Fail(c, api.CodeInvalidParam)
 		return
 	}
@@ -90,22 +102,14 @@ func Update(c *gin.Context) {
 	req.OrganizationID = claimInfo.OrganizationID
 
 	// 转到 handle 去处理
-	// todo: 下面的判断应该交给handler去处理，然后返回个错误，看一下super_admin：create那个接口
-	/*
-		if rowsAffected == 0 {
+	err := admin_handler.UpdateDep(&req)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
 			api.Fail(c, api.CodeInvalidParam)
 			return
 		}
-	*/
-	rowsAffected, err := admin_handler.UpdateDep(&req)
-	if err != nil {
-		// todo:用zap输出一下日志，看一下其他接口怎么实现的，系统性错误不用返回前端
-		api.FailWithErr(c, api.CodeSystemBusy, err.Error())
-		return
-	}
-	// 更新过程没有出错但 rowsAffected 等于 0 说明 DepartmentID 有误
-	if rowsAffected == 0 {
-		api.Fail(c, api.CodeInvalidParam)
+		zap.S().Error("admin_handler.UpdateDep()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
 		return
 	}
 	api.Success(c, "更新部门成功")
