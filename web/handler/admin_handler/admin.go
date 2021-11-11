@@ -60,7 +60,7 @@ func UpdateDep(req *forms.AdminReq) error {
 	dep.Role = 0
 
 	//更新 Department 数据
-	result := db.Model(&models.Department{}).Omit("organization_id", "department_id").Where("department_id = ? or organization_id = ?", dep.DepartmentID, dep.OrganizationID).Limit(1).Updates(&dep)
+	result := db.Model(&models.Department{}).Omit("organization_id", "department_id").Where("department_id = ? and organization_id = ?", dep.DepartmentID, dep.OrganizationID).Limit(1).Updates(&dep)
 	// rowsAffected 等于 0 说明参数有误
 	if result.RowsAffected == 0 {
 		return sql.ErrNoRows

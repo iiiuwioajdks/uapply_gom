@@ -79,7 +79,6 @@ func Login(c *gin.Context) {
 // Update 部门更新
 func Update(c *gin.Context) {
 	// 绑定参数
-	// todo: forms.AdminReq 后面没有跟 binding 的时候不进行绑定参数校验，不用判断 error
 	var req forms.AdminReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		zap.S().Info(err)
@@ -100,13 +99,14 @@ func Update(c *gin.Context) {
 	// 获取并绑定当前的 OrganizationID
 	claimInfo := claims.(*jwt2.Claims)
 	// 如果是管理员
-	if claimInfo.Role == 1 {
-		req.OrganizationID = claimInfo.OrganizationID
-	}
-	// 如果没有传给 DepartmentID ，说明是自己部门修改，
-	if req.DepartmentID == 0 {
+	if claimInfo.Role == 1 && req.DepartmentID == 0 {
+		api.FailWithErr(c, api.CodeInvalidParam, "组织修改时，department_id不能为空")
+		return
+	} else if req.DepartmentID == 0 {
 		req.DepartmentID = claimInfo.DepartmentID
 	}
+	req.OrganizationID = claimInfo.OrganizationID
+	// 如果没有传给 DepartmentID ，说明是自己部门修改，
 
 	// 转到 handle 去处理
 	err := admin_handler.UpdateDep(&req)
