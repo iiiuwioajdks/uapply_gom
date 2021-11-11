@@ -74,3 +74,25 @@ func ShowConcreteDepartInfo(depid string, orgid int) (*forms.AdminReq, error) {
 	}
 	return departInfo, nil
 }
+
+func GetOrganizationInfo(orgid string) (*models.Organization, error) {
+	// 获取数据库
+	db := global.DB
+
+	// 从数据库中获取组织信息
+	var org models.Organization
+	result := db.Where("organization_id = ?", orgid).First(&org)
+
+	//数据库的查询错误
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	// 过滤信息
+	info := &models.Organization{
+		OrganizationBase: models.OrganizationBase{OrganizationID: org.OrganizationID},
+		OrganizationName: org.OrganizationName,
+	}
+
+	return info, nil
+}

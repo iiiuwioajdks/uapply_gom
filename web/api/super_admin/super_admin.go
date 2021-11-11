@@ -36,7 +36,21 @@ func Update(c *gin.Context) {
 
 // GetOrg 获取组织信息
 func GetOrg(c *gin.Context) {
+	// 获取组织id
+	orgid, ok := c.Params.Get("orgid")
+	if !ok {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
 
+	// 转移handler处理
+	orgInfo, err := super_admin_handler.GetOrganizationInfo(orgid)
+	if err != nil {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+
+	api.Success(c, orgInfo)
 }
 
 // GetOrgDep 根据组织获取其下的附属部门
