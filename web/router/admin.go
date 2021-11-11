@@ -21,7 +21,7 @@ func InitAdminRouter(router *gin.RouterGroup) {
 
 		adminr.PATCH("/udpdep", admin.Update) // 根据部门id更新部门信息
 
-		adminr.GET("/getdep", admin.Get)
+		adminr.GET("/getdep", admin.Get)     //获取当前部门粗略信息
 		adminr.GET("/getusers/register")     // 部门获取报名自己部门的所有用户
 		adminr.GET("/getuser/register")      // 部门获取报名自己部门的某一个用户详细信息
 		adminr.GET("/getuser/unreview/:num") // 部门获取第n轮未面试成员

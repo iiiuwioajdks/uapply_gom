@@ -26,11 +26,11 @@ func Create(c *gin.Context) {
 		return
 	}
 	// 获取并绑定当前的 OrganizationID, 防止篡改
-	claims, ok := c.Get("claim")
+	claim, ok := c.Get("claim")
 	if !ok {
-		zap.S().Info(claims)
+		zap.S().Info(claim)
 	}
-	claimsInfo := claims.(*jwt2.Claims)
+	claimsInfo := claim.(*jwt2.Claims)
 	req.OrganizationID = claimsInfo.OrganizationID
 
 	// 转到handler去处理
@@ -78,12 +78,12 @@ func Update(c *gin.Context) {
 	var req forms.AdminReq
 	c.ShouldBindJSON(&req)
 
-	claims, ok := c.Get("claim")
+	claim, ok := c.Get("claim")
 	if !ok {
-		zap.S().Info(claims)
+		zap.S().Info(claim)
 	}
 	// 获取并绑定当前的 OrganizationID
-	claimInfo := claims.(*jwt2.Claims)
+	claimInfo := claim.(*jwt2.Claims)
 	// 如果是管理员
 	if claimInfo.Role == 1 && req.DepartmentID == 0 {
 		api.FailWithErr(c, api.CodeInvalidParam, "组织修改时，department_id不能为空")
@@ -138,5 +138,29 @@ func GetDetail(c *gin.Context) {
 
 // Get 获取某一部门粗略的信息
 func Get(c *gin.Context) {
+	// 获取 claims
+	claim, ok := c.Get("claim")
+	if !ok {
+		zap.S().Info(claim)
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	//获取 depid
+	depid := claimInfo.DepartmentID
 
+	//转到 handler 处理
+	depInfo, err := admin_handler.GetDepRoughDetail(depid)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.Fail(c, api.CodeInvalidParam)
+			return
+		}
+		zap.S().Error("admin_handler.GetDepRoughDetail()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, gin.H{
+		"organization_id": depInfo.OrganizationID,
+		"department_id":   depInfo.DepartmentID,
+		"department_name": depInfo.DepartmentName,
+	})
 }

@@ -88,3 +88,20 @@ func GetDepDetail(depid string) (*forms.AdminReq, error) {
 	}
 	return depInfo, nil
 }
+
+func GetDepRoughDetail(depid int) (*forms.AdminReq, error) {
+	db := global.DB
+
+	// 返回变量声明
+	depInfo := new(forms.AdminReq)
+	result := db.Table("department").Where("department_id = ?", depid).Find(&depInfo)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	// 没有查到数据
+	if result.RowsAffected == 0 {
+		return nil, sql.ErrNoRows
+	}
+	return depInfo, nil
+}
