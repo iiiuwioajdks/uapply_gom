@@ -18,11 +18,7 @@ import (
 func Create(c *gin.Context) {
 	// 绑定参数
 	var req forms.AdminReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		zap.S().Info(err)
-		api.Fail(c, api.CodeInvalidParam)
-		return
-	}
+	c.ShouldBindJSON(&req)
 
 	// 判断一下参数是否正确
 	if req.DepartmentName == "" || req.Account == "" || req.Password == "" {
@@ -80,17 +76,7 @@ func Login(c *gin.Context) {
 func Update(c *gin.Context) {
 	// 绑定参数
 	var req forms.AdminReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		zap.S().Info(err)
-		api.Fail(c, api.CodeInvalidParam)
-		return
-	}
-
-	//// 校验参数
-	//if req.DepartmentName == "" || req.Account == "" || req.Password == "" {
-	//	api.Fail(c, api.CodeInvalidParam)
-	//	return
-	//}
+	c.ShouldBindJSON(&req)
 
 	claims, ok := c.Get("claim")
 	if !ok {
@@ -124,7 +110,30 @@ func Update(c *gin.Context) {
 
 // GetDetail 获取某一个部门的详细信息
 func GetDetail(c *gin.Context) {
+	// 获取 depid
+	depid, ok := c.Params.Get("depid")
+	if !ok {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
 
+	//转到 handle 处理
+	depInfo, err := admin_handler.GetDepDetail(depid)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.Fail(c, api.CodeInvalidParam)
+			return
+		}
+		zap.S().Error("admin_handler.GetDepDetail()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	// 不返回账号、密码
+	api.Success(c, gin.H{
+		"organization_id": depInfo.OrganizationID,
+		"department_id":   depInfo.DepartmentID,
+		"department_name": depInfo.DepartmentName,
+	})
 }
 
 // Get 获取某一部门粗略的信息

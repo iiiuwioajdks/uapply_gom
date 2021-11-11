@@ -70,3 +70,21 @@ func UpdateDep(req *forms.AdminReq) error {
 	}
 	return nil
 }
+
+// GetDepDetail 获取部门详细信息
+func GetDepDetail(depid string) (*forms.AdminReq, error) {
+	db := global.DB
+
+	// 返回值声明
+	depInfo := new(forms.AdminReq)
+	result := db.Table("department").Where("department_id = ? and role = 0", depid).Find(&depInfo)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	// 没有查询到结果
+	if result.RowsAffected == 0 {
+		return nil, sql.ErrNoRows
+	}
+	return depInfo, nil
+}
