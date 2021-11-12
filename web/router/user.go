@@ -28,6 +28,7 @@ func InitUserRouter(router *gin.RouterGroup) {
 		jwtUser.GET("/register/status", user.GetRegStatus) // 用户查看已经报名的部门的招新状态
 		jwtUser.GET("/resume/gettmp", user.GetTmpResume)   // 用户获取草稿箱简历
 		jwtUser.GET("/resume/get", user.GetResume)         // 用户获取已经填写的简历信息
+		jwtUser.GET("/resume/check")                       // 检查是否已经填写简历了
 
 		jwtUser.PATCH("/resume", user.UpdateResume)   // 用户更新简历部分内容
 		jwtUser.PATCH("/resume/text", user.ClearText) // 一建清除text文本，这个要在数据库直接插入空，单独开一个接口可以省去很多判断

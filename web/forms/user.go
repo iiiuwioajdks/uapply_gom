@@ -9,7 +9,7 @@ type UserInfoReq struct {
 	Major   string `json:"major"`
 	Phone   string `json:"phone" binding:"required,mobile"`
 	Email   string `json:"email" binding:"required,email"`
-	Sex     int8   `json:"sex" binding:"required"` // 1为男，2为女
+	Sex     int8   `json:"sex" binding:"required,oneof=1 2"` // 1为男，2为女
 	Intro   string `json:"intro" binding:"required,max=100"`
 }
 
@@ -27,8 +27,8 @@ type UserResumeInfo struct {
 	StuNum  string `json:"stu_num"`
 	Address string `json:"address"`
 	Major   string `json:"major"`
-	Phone   string `json:"phone" binding:"mobile"`
-	Email   string `json:"email" binding:"email"`
+	Phone   string `json:"phone"`
+	Email   string `json:"email"`
 	Sex     int8   `json:"sex"` // 1为男，2为女
-	Intro   string `json:"intro" binding:"required,max=100"`
+	Intro   string `json:"intro" binding:"min=0,max=100"`
 }
