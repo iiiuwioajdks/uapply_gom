@@ -39,6 +39,11 @@ func SaveResume(c *gin.Context) {
 		api.FailWithErr(c, api.CodeInvalidParam, err.Error())
 		return
 	}
+	// 校验性别参数
+	if req.Sex != 1 && req.Sex != 2 {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
 	// 获取 wxClaim
 	wxClaim, ok := c.Get("wxClaim")
 	if !ok {

@@ -1,6 +1,6 @@
 package forms
 
-// UserInfoReq 用户简历请求，为了能在保存草稿时复用，此处不做 binding 要求
+// UserInfoReq 用户简历请求
 type UserInfoReq struct {
 	UID     int32  `json:"uid"`
 	Name    string `json:"name" binding:"required"`
