@@ -77,6 +77,20 @@ func GetOrg(c *gin.Context) {
 
 // GetOrgDep 根据组织获取其下的附属部门
 func GetOrgDep(c *gin.Context) {
+	// 获取组织id
+	orgid, ok := c.Params.Get("orgid")
+	if !ok {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+
+	// 转移handler处理
+	deps, err := super_admin_handler.GetOrgDepartments(orgid)
+	if err != nil {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+	api.Success(c, deps)
 
 }
 
