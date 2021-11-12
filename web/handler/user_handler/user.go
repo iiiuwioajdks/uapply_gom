@@ -2,6 +2,7 @@ package user_handler
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -71,4 +72,44 @@ func Login(code string) (token string, err error) {
 	global.DB.Save(&userLogin)
 
 	return
+}
+
+// GetUID 根据 OpenId 获取 UID
+func GetUID(openId string) (int32, error) {
+	db := global.DB
+
+	// UserWxInfo 声明
+	userWxInfo := new(models.UserWxInfo)
+	result := db.Table("user_wx_info").Select("uid").Where("open_id = ?", openId).First(userWxInfo)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	// 没有查到用户信息
+	if result.RowsAffected == 0 {
+		return 0, sql.ErrNoRows
+	}
+	return userWxInfo.UID, nil
+}
+
+// SaveResume 保存用户简历
+func SaveResume(req *forms.UserInfoReq) error {
+	db := global.DB
+
+	// 绑定 model 参数
+	userInfo := &models.UserInfo{
+		UID:     req.UID,
+		Name:    req.Name,
+		StuNum:  req.StuNum,
+		Address: req.Address,
+		Major:   req.Major,
+		Phone:   req.Phone,
+		Email:   req.Email,
+		Sex:     req.Sex,
+		Intro:   req.Intro,
+	}
+	result := db.Save(userInfo)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }
