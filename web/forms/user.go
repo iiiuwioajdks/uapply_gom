@@ -12,3 +12,23 @@ type UserInfoReq struct {
 	Sex     int8   `json:"sex" binding:"required"` // 1为男，2为女
 	Intro   string `json:"intro" binding:"required,max=100"`
 }
+
+// UserRegisterInfo 用户报名表单
+type UserRegisterInfo struct {
+	UID            int32 `json:"uid"`
+	OrganizationID int   `json:"organization_id" binding:"required"`
+	DepartmentID   int   `json:"department_id" binding:"required"`
+}
+
+// UserResumeInfo 更新简历和保存到草稿箱的表单
+type UserResumeInfo struct {
+	UID     int32  `json:"uid"`
+	Name    string `json:"name"`
+	StuNum  string `json:"stu_num"`
+	Address string `json:"address"`
+	Major   string `json:"major"`
+	Phone   string `json:"phone" binding:"mobile"`
+	Email   string `json:"email" binding:"email"`
+	Sex     int8   `json:"sex"` // 1为男，2为女
+	Intro   string `json:"intro" binding:"required,max=100"`
+}
