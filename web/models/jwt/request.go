@@ -11,6 +11,7 @@ type Claims struct {
 
 type WXClaims struct {
 	jwt.StandardClaims
+	UID        int32
 	Role       int
 	Openid     string
 	SessionKey string

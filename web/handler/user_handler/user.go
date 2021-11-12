@@ -2,7 +2,6 @@ package user_handler
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -16,7 +15,7 @@ import (
 	"uapply_go/web/models/jwt"
 )
 
-func Login(code string) (token string, err error) {
+func Login(code string) (token string, uid int32, err error) {
 	url := "https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code"
 
 	// 合成url, 这里的appId和secret是在微信公众平台上获取的
@@ -28,67 +27,50 @@ func Login(code string) (token string, err error) {
 
 	request, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	response, err := client.Do(request)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	var ws forms.WxSession
 	if err := json.Unmarshal(body, &ws); err != nil {
-		return "", err
+		return "", 0, err
 	}
 	// todo: delete
 	if ws.OpenID == "" {
-		return "", errInfo.ErrWXCode
+		return "", 0, errInfo.ErrWXCode
 	}
 	log.Println("ws1:", ws)
 
+	if err != nil {
+		return "", 0, err
+	}
 	j := middleware.NewJWT()
-	token, err = j.CreateWXToken(jwt.WXClaims{
+	claim := jwt.WXClaims{
 		Role:       0,
 		Openid:     ws.OpenID,
 		SessionKey: ws.SessionKey,
-	})
-	if err != nil {
-		return "", err
 	}
-
 	// 判断数据库是否存在，不存在则添加
 	var userLogin models.UserWxInfo
-	if result := global.DB.Where(models.UserWxInfo{OpenId: ws.OpenID}).First(&userLogin); result.RowsAffected == 1 {
-		return
+	if result := global.DB.Where(models.UserWxInfo{OpenId: ws.OpenID}).First(&userLogin); result.RowsAffected == 0 {
+		userLogin.Role = 0
+		userLogin.SessionKey = ws.SessionKey
+		userLogin.OpenId = ws.OpenID
+		global.DB.Save(&userLogin)
 	}
-	userLogin.Role = 0
-	userLogin.SessionKey = ws.SessionKey
-	userLogin.OpenId = ws.OpenID
-	global.DB.Save(&userLogin)
-
+	claim.UID = userLogin.UID
+	uid = userLogin.UID
+	token, err = j.CreateWXToken(claim)
 	return
-}
-
-// GetUID 根据 OpenId 获取 UID
-func GetUID(openId string) (int32, error) {
-	db := global.DB
-
-	// UserWxInfo 声明
-	userWxInfo := new(models.UserWxInfo)
-	result := db.Table("user_wx_info").Select("uid").Where("open_id = ?", openId).First(userWxInfo)
-	if result.Error != nil {
-		return 0, result.Error
-	}
-	// 没有查到用户信息
-	if result.RowsAffected == 0 {
-		return 0, sql.ErrNoRows
-	}
-	return userWxInfo.UID, nil
 }
 
 // SaveResume 保存用户简历
@@ -107,7 +89,7 @@ func SaveResume(req *forms.UserInfoReq) error {
 		Sex:     req.Sex,
 		Intro:   req.Intro,
 	}
-	result := db.Save(userInfo)
+	result := db.Save(&userInfo)
 	if result.Error != nil {
 		return result.Error
 	}

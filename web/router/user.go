@@ -11,6 +11,7 @@ func InitUserRouter(router *gin.RouterGroup) {
 	uGroup := router.Group("/user")
 
 	{
+		// code 是前端给我们，是微信登录凭证
 		uGroup.GET("/login/:code", user.Login)
 	}
 

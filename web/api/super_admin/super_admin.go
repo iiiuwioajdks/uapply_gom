@@ -10,6 +10,7 @@ import (
 	"uapply_go/web/forms"
 	"uapply_go/web/handler/super_admin_handler"
 	"uapply_go/web/models/jwt"
+	"uapply_go/web/models/response"
 )
 
 // Create 超级管理员（组织）的创建
@@ -78,20 +79,30 @@ func GetOrg(c *gin.Context) {
 // GetOrgDep 根据组织获取其下的附属部门
 func GetOrgDep(c *gin.Context) {
 	// 获取组织id
-	orgid, ok := c.Params.Get("orgid")
+	claim, ok := c.Get("claim")
 	if !ok {
-		api.Fail(c, api.CodeInvalidParam)
+		api.Fail(c, api.CodeSystemBusy)
 		return
 	}
+	// 获取并绑定当前的 OrganizationID
+	claimInfo := claim.(*jwt.Claims)
+	orgid := claimInfo.OrganizationID
 
 	// 转移handler处理
 	deps, err := super_admin_handler.GetOrgDepartments(orgid)
 	if err != nil {
-		api.Fail(c, api.CodeInvalidParam)
+		api.Fail(c, api.CodeSystemBusy)
 		return
 	}
-	api.Success(c, deps)
+	var rsp []*response.DepRoughRsp
+	for _, dep := range deps {
+		rsp = append(rsp, &response.DepRoughRsp{
+			DepartmentName: dep.DepartmentName,
+			DepartmentID:   int(dep.DepartmentID),
+		})
+	}
 
+	api.Success(c, rsp)
 }
 
 // Delete 组织删除其下附属的某一个或多个部门

@@ -10,7 +10,7 @@ type UserInfo struct {
 	Major   string `json:"major"`   // 专业
 	Phone   string `json:"phone"`   // 手机
 	Email   string `json:"email"`   // 邮箱
-	Sex     int8   `json:"sex"`     // 性别，0男，1女
+	Sex     int8   `json:"sex"`     // 性别， 1为男，2为女
 	Intro   string `json:"intro"`   // 简介
 }
 

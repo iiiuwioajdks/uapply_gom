@@ -89,10 +89,10 @@ func Update(c *gin.Context) {
 		api.FailWithErr(c, api.CodeInvalidParam, "组织修改时，department_id不能为空")
 		return
 	} else if req.DepartmentID == 0 {
+		// 如果没有传给 DepartmentID ，说明是自己部门修改，而不是管理员
 		req.DepartmentID = claimInfo.DepartmentID
 	}
 	req.OrganizationID = claimInfo.OrganizationID
-	// 如果没有传给 DepartmentID ，说明是自己部门修改，
 
 	// 转到 handle 去处理
 	err := admin_handler.UpdateDep(&req)

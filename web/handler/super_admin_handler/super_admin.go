@@ -128,23 +128,18 @@ func GetOrganizationInfo(orgid string) (*models.Organization, error) {
 	return &org, nil
 }
 
-func GetOrgDepartments(orgid string) (*[]models.Department, error) {
+func GetOrgDepartments(orgid int) ([]*models.Department, error) {
 	// 获取数据库
 	db := global.DB
 
 	// 从数据库中获取部门名称
-	var deps []models.Department
-	result := db.Select("department_name", "department_id", "role").Where("organization_id = ?", orgid).Find(&deps)
-
-	// 数据库中无此部门
-	if result.RowsAffected == 0 {
-		return nil, sql.ErrNoRows
-	}
+	var deps []*models.Department
+	result := db.Select("department_name", "department_id").Where("organization_id = ? and role = 0", orgid).Find(&deps)
 
 	// 数据库的查询错误
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return &deps, nil
+	return deps, nil
 }

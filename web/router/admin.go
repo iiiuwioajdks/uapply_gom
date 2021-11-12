@@ -12,6 +12,7 @@ func InitAdminRouter(router *gin.RouterGroup) {
 	adminr := router.Group("/dep").Use(middleware.JWTAuth())
 	{
 		// 首先需要判断 num 的值，只能为1和2，1是第一轮面试，2 是第二轮面试
+		adminr.POST("/create/people")         // 添加增加部员信息接口
 		adminr.POST("/interviewer/add")       // 增加面试官
 		adminr.POST("/interview/sms/:num")    // 发送第n轮面试短信
 		adminr.POST("/interview/email/:num")  // 发送第n轮面试邮件
