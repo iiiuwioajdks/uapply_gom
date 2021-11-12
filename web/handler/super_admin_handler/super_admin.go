@@ -36,6 +36,43 @@ func Create(csa *forms.CreateSAdmin) error {
 	return nil
 }
 
+// Update 更新超级管理员信息
+func Update(req *forms.UpdateSAdmin) error {
+	db := global.DB
+	// 更新 Organization 的信息
+	var orgModel models.Organization
+	if req.OrganizationName != "" {
+		orgModel.OrganizationName = req.OrganizationName
+	}
+	result := db.Model(&models.Organization{}).Omit("organization_id").Where("organization_id = ?", req.OrganizationID).
+		Updates(&orgModel)
+	// rowsAffected 等于 0 说明参数有误
+	if result.RowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	if result.Error != nil {
+		return result.Error
+	}
+
+	// 更新 Organization 在department表的信息，即更新账号和密码
+	var depModel models.Department
+	if req.Account != "" && req.Password != "" {
+		depModel.DepartmentName = orgModel.OrganizationName + "-admin"
+		depModel.Account = req.Account
+		depModel.Password = req.Password
+	}
+	result = db.Model(&models.Department{}).Omit("department_id").Where("department_id = ?", req.DepartmentID).
+		Updates(&depModel)
+	// rowsAffected 等于 0 说明参数有误
+	if result.RowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
 func DeleteDepartment(depid string, orgid int) error {
 	//获取数据库
 	db := global.DB

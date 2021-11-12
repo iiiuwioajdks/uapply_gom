@@ -31,6 +31,28 @@ func Create(c *gin.Context) {
 
 // Update 组织信息的更新
 func Update(c *gin.Context) {
+	// 绑定参数
+	var req forms.UpdateSAdmin
+	if err := c.ShouldBindJSON(&req); err != nil {
+		zap.S().Info(err)
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+	claim, ok := c.Get("claim")
+	if !ok {
+		zap.S().Info(claim)
+	}
+	// 获取并绑定当前的 OrganizationID
+	claimInfo := claim.(*jwt.Claims)
+	req.DepartmentID = claimInfo.DepartmentID
+	req.OrganizationID = claimInfo.OrganizationID
+	err := super_admin_handler.Update(&req)
+	if err != nil {
+		zap.S().Info(err)
+		api.FailWithErr(c, api.CodeInvalidParam, err.Error())
+		return
+	}
+	api.Success(c, "组织信息更新成功")
 
 }
 

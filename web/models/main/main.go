@@ -31,8 +31,8 @@ func main() {
 	})
 
 	// 建表语句
-	//db.AutoMigrate(&models.Department{})
-	//db.AutoMigrate(&models.Organization{})
+	db.AutoMigrate(&models.Department{})
+	db.AutoMigrate(&models.Organization{})
 	db.AutoMigrate(&models.UserInfo{})
 	db.AutoMigrate(&models.UserWxInfo{})
 	db.AutoMigrate(&models.UserRegister{})
