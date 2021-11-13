@@ -113,24 +113,31 @@ func Register(regInfo *forms.UserRegisterInfo) error {
 
 	// 保存数据库
 	// 判断简历是否存在
-	if result := db.Model(models.UserInfo{}).Select("uid").Where("uid = ?", regInfo.UID).First(reg); result.RowsAffected == 0 {
-		fmt.Println(result.Error)
-		return result.Error
+	var count int64
+	if db.Model(&models.UserInfo{}).Where(reg.UID).Count(&count); count == 0 {
+		return errInfo.ErrResumeNotExist
 	}
+
 	// 判断部门是否存在
-	if result := db.Model(models.Department{}).Select("department_id").Where("department_id = ?", regInfo.DepartmentID).First(reg); result.RowsAffected == 0 {
+	//if result := db.Model(models.Department{}).Select("department_id").Where("department_id = ?", regInfo.DepartmentID).First(reg); result.RowsAffected == 0 {
+	//	return result.Error
+	//}
+	if db.Model(models.Department{}).Where("department_id = ? and organization_id = ?", regInfo.DepartmentID, regInfo.OrganizationID).Count(&count); count == 0 {
+		return errInfo.ErrInvalidParam
+	}
+
+	// 不可重复报名某一组织
+	//if result := db.Model(models.UserRegister{}).Select("department_id", "uid").Where("department_id = ? and uid = ?", regInfo.DepartmentID, regInfo.UID).First(reg); result.RowsAffected != 0 {
+	//	return nil
+	//}
+	if db.Model(models.UserRegister{}).Where("uid=? and organization_id=?", regInfo.UID, regInfo.OrganizationID).Count(&count); count != 0 {
+		return errInfo.ErrReRegister
+	}
+
+	if result := db.Create(&reg); result.Error != nil {
 		return result.Error
 	}
 
-	// 不可重复报名某一部门
-	if result := db.Model(models.UserRegister{}).Select("department_id", "uid").Where("department_id = ? and uid = ?", regInfo.DepartmentID, regInfo.UID).First(reg); result.RowsAffected != 0 {
-		return nil
-	}
-
-	result := db.Create(reg)
-	if result.Error != nil {
-		return result.Error
-	}
 	return nil
 }
 

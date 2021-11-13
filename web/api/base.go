@@ -17,6 +17,7 @@ const (
 	CodeUserInfoNotExist
 	CodeHasNotPower
 	CodeUserNotExist
+	CodeBadRequest
 )
 
 var codeMsg = map[CodeType]string{
@@ -26,6 +27,7 @@ var codeMsg = map[CodeType]string{
 	CodeUserInfoNotExist: "用户信息加载失败",
 	CodeHasNotPower:      "没有权限",
 	CodeUserNotExist:     "用户不存在",
+	CodeBadRequest:       "错误请求",
 }
 
 func (c CodeType) Msg() string {
@@ -62,6 +64,7 @@ func HandleValidatorError(c *gin.Context, err error) {
 	errs, ok := err.(validator.ValidationErrors)
 	if !ok {
 		FailWithErr(c, CodeInvalidParam, err.Error())
+		return
 	}
 	FailWithErr(c, CodeInvalidParam, RemoveTopStruct(errs.Translate(global.Trans)))
 	return

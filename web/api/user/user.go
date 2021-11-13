@@ -72,7 +72,7 @@ func Register(c *gin.Context) {
 	// 绑定参数
 	var regInfo forms.UserRegisterInfo
 	if err := c.ShouldBindJSON(&regInfo); err != nil {
-		api.Fail(c, api.CodeInvalidParam)
+		api.HandleValidatorError(c, err)
 		return
 	}
 
@@ -80,6 +80,8 @@ func Register(c *gin.Context) {
 	wxClaim, ok := c.Get("wxClaim")
 	if !ok {
 		zap.S().Info(wxClaim)
+		api.Fail(c, api.CodeUserNotExist)
+		return
 	}
 	wxClaimInfo := wxClaim.(*jwt2.WXClaims)
 
@@ -89,6 +91,16 @@ func Register(c *gin.Context) {
 	// 转移handler
 	err := user_handler.Register(&regInfo)
 	if err != nil {
+		if errors.Is(err, errInfo.ErrResumeNotExist) {
+			api.FailWithErr(c, api.CodeBadRequest, err.Error())
+			return
+		} else if errors.Is(err, errInfo.ErrInvalidParam) {
+			api.FailWithErr(c, api.CodeBadRequest, "组织或部门已不存在")
+			return
+		} else if errors.Is(err, errInfo.ErrReRegister) {
+			api.FailWithErr(c, api.CodeBadRequest, "不可重复报名同一组织")
+			return
+		}
 		zap.S().Error("user_handler.Register()", zap.Error(err))
 		api.Fail(c, api.CodeSystemBusy)
 		return
