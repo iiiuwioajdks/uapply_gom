@@ -54,7 +54,7 @@ func Login(code string) (token string, uid int32, err error) {
 		return "", 0, err
 	}
 	j := middleware.NewJWT()
-	claim := jwt.WXClaims{
+	claim := jwt.WXClaims{ // UID自增。没有则创建时添加UID
 		Role:       0,
 		Openid:     ws.OpenID,
 		SessionKey: ws.SessionKey,
@@ -121,6 +121,12 @@ func Register(regInfo *forms.UserRegisterInfo) error {
 	if result := db.Model(models.Department{}).Select("department_id").Where("department_id = ?", regInfo.DepartmentID).First(reg); result.RowsAffected == 0 {
 		return result.Error
 	}
+
+	// 不可重复报名某一部门
+	if result := db.Model(models.UserRegister{}).Select("department_id", "uid").Where("department_id = ? and uid = ?", regInfo.DepartmentID, regInfo.UID).First(reg); result.RowsAffected != 0 {
+		return nil
+	}
+
 	result := db.Create(reg)
 	if result.Error != nil {
 		return result.Error
@@ -128,45 +134,26 @@ func Register(regInfo *forms.UserRegisterInfo) error {
 	return nil
 }
 
+// UpdateResume 更新简历
 func UpdateResume(req *forms.UserResumeInfo) error {
 	db := global.DB
 
-	var resumeInfo models.UserInfo
-	// 绑定传过来的参数
-	resumeInfo.UID = req.UID
-	//// 下面的参数都是校验过的，只要字段不是零值，就是要更新这个字段
-	//if req.Name != "" {
-	//	resumeInfo.Name = req.Name
-	//}
-	//if req.StuNum != "" {
-	//	resumeInfo.StuNum = req.StuNum
-	//}
-	//if req.Address != "" {
-	//	resumeInfo.Address = req.Address
-	//}
-	//if req.Major != "" {
-	//	resumeInfo.Major = req.Major
-	//}
-	//if req.Phone != "" {
-	//	resumeInfo.Phone = req.Phone
-	//}
-	//if req.Email != "" {
-	//	resumeInfo.Email = req.Email
-	//}
-	//if req.Name != "" {
-	//	resumeInfo.Name = req.Name
-	//}
-	//if req.Sex != 0 {
-	//	resumeInfo.Sex = req.Sex
-	//}
-	//if req.Intro != "" {
-	//	resumeInfo.Intro = req.Intro
-	//}
-
-	// 更新数据,updates 不会更新 0 值和 空值
-	result := db.Model(&models.UserInfo{}).Omit("uid").Where("uid = ?", resumeInfo.UID).Updates(&req)
+	result := db.Model(&models.UserInfo{}).Omit("uid").Where("uid = ?", req.UID).Updates(&req)
 	if result.Error != nil {
 		return result.Error
 	}
 	return nil
+}
+
+// GetResume 获取简历
+func GetResume(uid int32) (*forms.UserInfoReq, error) {
+	db := global.DB
+
+	resume := new(forms.UserInfoReq)
+	// 查询数据
+	result := db.Table("user_info").Where("uid = ?", uid).First(resume)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return resume, nil
 }
