@@ -190,5 +190,22 @@ func UpdateResume(c *gin.Context) {
 }
 
 func ClearText(c *gin.Context) {
+	var req forms.UserInfoReq
 
+	// 获取claim
+	claim, ok := c.Get("wxClaim")
+	if !ok {
+		zap.S().Info(claim)
+	}
+	wxClaim := claim.(*jwt2.WXClaims)
+	// 绑定uid
+	req.UID = wxClaim.UID
+	// 转移handler
+	err := user_handler.ClearText(&req)
+	if err != nil {
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+
+	api.Success(c, "清空自我介绍成功")
 }

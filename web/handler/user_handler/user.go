@@ -101,6 +101,7 @@ func SaveResume(req *forms.UserInfoReq) error {
 	return nil
 }
 
+// Register 用户报名
 func Register(regInfo *forms.UserRegisterInfo) error {
 	db := global.DB
 
@@ -119,17 +120,11 @@ func Register(regInfo *forms.UserRegisterInfo) error {
 	}
 
 	// 判断部门是否存在
-	//if result := db.Model(models.Department{}).Select("department_id").Where("department_id = ?", regInfo.DepartmentID).First(reg); result.RowsAffected == 0 {
-	//	return result.Error
-	//}
 	if db.Model(models.Department{}).Where("department_id = ? and organization_id = ?", regInfo.DepartmentID, regInfo.OrganizationID).Count(&count); count == 0 {
 		return errInfo.ErrInvalidParam
 	}
 
 	// 不可重复报名某一组织
-	//if result := db.Model(models.UserRegister{}).Select("department_id", "uid").Where("department_id = ? and uid = ?", regInfo.DepartmentID, regInfo.UID).First(reg); result.RowsAffected != 0 {
-	//	return nil
-	//}
 	if db.Model(models.UserRegister{}).Where("uid=? and organization_id=?", regInfo.UID, regInfo.OrganizationID).Count(&count); count != 0 {
 		return errInfo.ErrReRegister
 	}
@@ -163,4 +158,22 @@ func GetResume(uid int32) (*forms.UserInfoReq, error) {
 		return nil, result.Error
 	}
 	return resume, nil
+}
+
+// ClearText 一键清空自我介绍
+func ClearText(req *forms.UserInfoReq) error {
+	db := global.DB
+
+	resume := &models.UserInfo{
+		Intro: "",
+	}
+
+	// 数据库中更改intro
+	result := db.Select("intro").Where("uid = ?", req.UID).Save(&resume)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+
 }
