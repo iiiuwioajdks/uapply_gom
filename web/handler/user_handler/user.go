@@ -122,3 +122,46 @@ func Register(regInfo *forms.UserRegisterInfo) error {
 	}
 	return nil
 }
+
+func UpdateResume(req *forms.UserResumeInfo) error {
+	db := global.DB
+
+	var resumeInfo models.UserInfo
+	// 绑定传过来的参数
+	resumeInfo.UID = req.UID
+	// 下面的参数都是校验过的，只要字段不是零值，就是要更新这个字段
+	if req.Name != "" {
+		resumeInfo.Name = req.Name
+	}
+	if req.StuNum != "" {
+		resumeInfo.StuNum = req.StuNum
+	}
+	if req.Address != "" {
+		resumeInfo.Address = req.Address
+	}
+	if req.Major != "" {
+		resumeInfo.Major = req.Major
+	}
+	if req.Phone != "" {
+		resumeInfo.Phone = req.Phone
+	}
+	if req.Email != "" {
+		resumeInfo.Email = req.Email
+	}
+	if req.Name != "" {
+		resumeInfo.Name = req.Name
+	}
+	if req.Sex != 0 {
+		resumeInfo.Sex = req.Sex
+	}
+	if req.Intro != "" {
+		resumeInfo.Intro = req.Intro
+	}
+
+	// 更新数据
+	result := db.Model(&models.UserInfo{}).Omit("uid").Where("uid = ?", resumeInfo.UID).Updates(&resumeInfo)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}

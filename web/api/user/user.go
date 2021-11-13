@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"uapply_go/web/global/errInfo"
 	"uapply_go/web/handler/user_handler"
 	jwt2 "uapply_go/web/models/jwt"
+	validator2 "uapply_go/web/validator"
 )
 
 // Login 微信小程序用户端登录
@@ -109,7 +111,57 @@ func GetResume(c *gin.Context) {
 }
 
 func UpdateResume(c *gin.Context) {
+	var req forms.UserResumeInfo
+	//绑定参数
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+	// 需要更新电话时校验电话
+	if req.Phone != "" {
+		validator := validator.New()
+		validator.RegisterValidation("mobile", validator2.ValidateMobile)
+		err := validator.Var(req.Phone, "mobile")
+		if err != nil {
+			api.Fail(c, api.CodeInvalidParam)
+			return
+		}
+	}
+	// 需要更新邮箱时校验邮箱
+	if req.Email != "" {
+		validator := validator.New()
+		validator.RegisterValidation("email", validator2.ValidateEmail)
+		err := validator.Var(req.Email, "email")
+		if err != nil {
+			api.Fail(c, api.CodeInvalidParam)
+			return
+		}
+	}
+	// 需要更新性别时校验性别
+	if req.Sex != 0 {
+		if req.Sex != 1 && req.Sex != 2 {
+			api.Fail(c, api.CodeInvalidParam)
+			return
+		}
+	}
 
+	//获取 claim
+	claim, ok := c.Get("wxClaim")
+	if !ok {
+		zap.S().Info(claim)
+	}
+	wxClaim := claim.(*jwt2.WXClaims)
+	// 绑定 uid
+	req.UID = wxClaim.UID
+	// 转到 handler 处理
+	err = user_handler.UpdateResume(&req)
+	if err != nil {
+		zap.S().Error("user_handler.UpdateResume()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, "更新简历成功")
 }
 
 func ClearText(c *gin.Context) {
