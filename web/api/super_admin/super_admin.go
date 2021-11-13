@@ -166,3 +166,8 @@ func GetDepDetail(c *gin.Context) {
 	// 返回
 	api.Success(c, info)
 }
+
+// GetAllUserStatistic 获得一个组织下所有报名人数和男女信息
+func GetAllUserStatistic(c *gin.Context) {
+
+}

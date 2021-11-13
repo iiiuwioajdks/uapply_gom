@@ -2,7 +2,6 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"log"
@@ -10,8 +9,9 @@ import (
 	"uapply_go/web/forms"
 	"uapply_go/web/global/errInfo"
 	"uapply_go/web/handler/user_handler"
+	"uapply_go/web/models"
 	jwt2 "uapply_go/web/models/jwt"
-	validator2 "uapply_go/web/validator"
+	v2 "uapply_go/web/validator"
 )
 
 // Login 微信小程序用户端登录
@@ -124,30 +124,44 @@ func UpdateResume(c *gin.Context) {
 	}
 	// 需要更新电话时校验电话
 	if req.Phone != "" {
-		validator := validator.New()
-		validator.RegisterValidation("mobile", validator2.ValidateMobile)
-		err := validator.Var(req.Phone, "mobile")
-		if err != nil {
-			api.Fail(c, api.CodeInvalidParam)
+		//validator := validator.New()
+		//validator.RegisterValidation("mobile", validator2.ValidateMobile)
+		//err := validator.Var(req.Phone, "mobile")
+		//if err != nil {
+		//	api.Fail(c, api.CodeInvalidParam)
+		//	return
+		//}
+		ok := v2.ValidateFunc(req.Phone, v2.PHONE)
+		if !ok {
+			api.FailWithErr(c, api.CodeInvalidParam, "手机号不符合验证规则")
 			return
 		}
 	}
 	// 需要更新邮箱时校验邮箱
 	if req.Email != "" {
-		validator := validator.New()
-		validator.RegisterValidation("email", validator2.ValidateEmail)
-		err := validator.Var(req.Email, "email")
-		if err != nil {
-			api.Fail(c, api.CodeInvalidParam)
+		//validator := validator.New()
+		//validator.RegisterValidation("email", v2.ValidateEmail)
+		//err := validator.Var(req.Email, "email")
+		//if err != nil {
+		//	api.Fail(c, api.CodeInvalidParam)
+		//	return
+		//}
+		ok := v2.ValidateFunc(req.Phone, v2.PHONE)
+		if !ok {
+			api.FailWithErr(c, api.CodeInvalidParam, "邮箱不符合验证规则")
 			return
 		}
 	}
 	// 需要更新性别时校验性别
-	if req.Sex != 0 {
-		if req.Sex != 1 && req.Sex != 2 {
-			api.Fail(c, api.CodeInvalidParam)
-			return
-		}
+	//if req.Sex != 0 {
+	//	if req.Sex != 1 && req.Sex != 2 {
+	//		api.Fail(c, api.CodeInvalidParam)
+	//		return
+	//	}
+	//}
+	if req.Sex != 0 && req.Sex != models.MALE && req.Sex != models.FEMALE {
+		api.Fail(c, api.CodeInvalidParam)
+		return
 	}
 
 	//获取 claim
