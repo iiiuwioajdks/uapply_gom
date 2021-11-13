@@ -94,7 +94,7 @@ func GetDepRoughDetail(depid int) (*forms.AdminReq, error) {
 
 	// 返回变量声明
 	depInfo := new(forms.AdminReq)
-	result := db.Table("department").Where("department_id = ?", depid).Find(&depInfo)
+	result := db.Table("department").Omit("account", "password").Where("department_id = ?", depid).Find(&depInfo)
 
 	if result.Error != nil {
 		return nil, result.Error

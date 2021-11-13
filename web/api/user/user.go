@@ -111,7 +111,22 @@ func GetTmpResume(c *gin.Context) {
 }
 
 func GetResume(c *gin.Context) {
-
+	// 获取wxClaim
+	wxClaim, ok := c.Get("wxClaim")
+	if !ok {
+		zap.S().Info(wxClaim)
+	}
+	claimInfo := wxClaim.(*jwt2.WXClaims)
+	// 获取 UID
+	uid := claimInfo.UID
+	// 转到 handler 处理
+	resume, err := user_handler.GetResume(uid)
+	if err != nil {
+		zap.S().Error("user_handler.GetResume()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, resume)
 }
 
 func UpdateResume(c *gin.Context) {

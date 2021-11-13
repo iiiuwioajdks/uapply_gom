@@ -128,6 +128,7 @@ func Register(regInfo *forms.UserRegisterInfo) error {
 	return nil
 }
 
+// UpdateResume 更新简历
 func UpdateResume(req *forms.UserResumeInfo) error {
 	db := global.DB
 
@@ -136,4 +137,17 @@ func UpdateResume(req *forms.UserResumeInfo) error {
 		return result.Error
 	}
 	return nil
+}
+
+// GetResume 获取简历
+func GetResume(uid int32) (*forms.UserInfoReq, error) {
+	db := global.DB
+
+	resume := new(forms.UserInfoReq)
+	// 查询数据
+	result := db.Table("user_info").Where("uid = ?", uid).First(resume)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return resume, nil
 }
