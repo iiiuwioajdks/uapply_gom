@@ -89,7 +89,34 @@ func SaveResume(req *forms.UserInfoReq) error {
 		Sex:     req.Sex,
 		Intro:   req.Intro,
 	}
-	result := db.Save(&userInfo)
+	result := db.Save(userInfo)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func Register(regInfo *forms.UserRegisterInfo) error {
+	db := global.DB
+
+	// 绑定 model 参数
+	reg := &models.UserRegister{
+		UID:            regInfo.UID,
+		OrganizationID: regInfo.OrganizationID,
+		DepartmentID:   regInfo.DepartmentID,
+	}
+
+	// 保存数据库
+	// 判断简历是否存在
+	if result := db.Model(models.UserInfo{}).Select("uid").Where("uid = ?", regInfo.UID).First(reg); result.RowsAffected == 0 {
+		fmt.Println(result.Error)
+		return result.Error
+	}
+	// 判断部门是否存在
+	if result := db.Model(models.Department{}).Select("department_id").Where("department_id = ?", regInfo.DepartmentID).First(reg); result.RowsAffected == 0 {
+		return result.Error
+	}
+	result := db.Create(reg)
 	if result.Error != nil {
 		return result.Error
 	}

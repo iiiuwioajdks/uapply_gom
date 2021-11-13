@@ -63,6 +63,32 @@ func SaveTmpResume(c *gin.Context) {
 }
 
 func Register(c *gin.Context) {
+	// 绑定参数
+	var regInfo forms.UserRegisterInfo
+	if err := c.ShouldBindJSON(&regInfo); err != nil {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+
+	// 获取wxClaim
+	wxClaim, ok := c.Get("wxClaim")
+	if !ok {
+		zap.S().Info(wxClaim)
+	}
+	wxClaimInfo := wxClaim.(*jwt2.WXClaims)
+
+	// 绑定UID
+	regInfo.UID = wxClaimInfo.UID
+
+	// 转移handler
+	err := user_handler.Register(&regInfo)
+	if err != nil {
+		zap.S().Error("user_handler.Register()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+
+	api.Success(c, "用户报名成功")
 
 }
 
