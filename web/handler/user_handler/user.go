@@ -76,6 +76,11 @@ func Login(code string) (token string, uid int32, err error) {
 // SaveResume 保存用户简历
 func SaveResume(req *forms.UserInfoReq) error {
 	db := global.DB
+	var count int64
+	db.Model(&models.UserInfo{}).Where("uid=?", req.UID).Count(&count)
+	if count != 0 {
+		return errInfo.ErrResumeExist
+	}
 
 	// 绑定 model 参数
 	userInfo := &models.UserInfo{

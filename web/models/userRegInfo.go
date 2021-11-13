@@ -2,6 +2,11 @@ package models
 
 import "gorm.io/gorm"
 
+const (
+	MALE = 1 + iota
+	FEMALE
+)
+
 type UserInfo struct {
 	UID     int32  `json:"uid" gorm:"primaryKey"`
 	Name    string `json:"name"` // 姓名

@@ -53,6 +53,10 @@ func SaveResume(c *gin.Context) {
 	//转到 handler 处理
 	err := user_handler.SaveResume(&req)
 	if err != nil {
+		if errors.Is(err, errInfo.ErrResumeExist) {
+			api.FailWithErr(c, api.CodeInvalidParam, err.Error())
+			return
+		}
 		zap.S().Error("user_handler.SaveResume()", zap.Error(err))
 		api.Fail(c, api.CodeSystemBusy)
 		return
