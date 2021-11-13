@@ -38,7 +38,7 @@ func SaveResume(c *gin.Context) {
 	// 绑定参数
 	var req forms.UserInfoReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		api.FailWithErr(c, api.CodeInvalidParam, err.Error())
+		api.HandleValidatorError(c, err)
 		return
 	}
 	// 获取 wxClaim

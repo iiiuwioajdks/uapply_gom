@@ -22,6 +22,7 @@ func Init() *gin.Engine {
 	Router := InitRouter()
 	// 注册验证器
 	InitValidators()
+	InitTrans("zh")
 	// mysql初始化
 	err = InitMysql()
 	if err != nil {
