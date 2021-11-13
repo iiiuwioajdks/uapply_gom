@@ -54,7 +54,7 @@ func Login(code string) (token string, uid int32, err error) {
 		return "", 0, err
 	}
 	j := middleware.NewJWT()
-	claim := jwt.WXClaims{
+	claim := jwt.WXClaims{ // UID自增。没有则创建时添加UID
 		Role:       0,
 		Openid:     ws.OpenID,
 		SessionKey: ws.SessionKey,
@@ -121,6 +121,12 @@ func Register(regInfo *forms.UserRegisterInfo) error {
 	if result := db.Model(models.Department{}).Select("department_id").Where("department_id = ?", regInfo.DepartmentID).First(reg); result.RowsAffected == 0 {
 		return result.Error
 	}
+
+	// 不可重复报名某一部门
+	if result := db.Model(models.UserRegister{}).Select("department_id", "uid").Where("department_id = ? and uid = ?", regInfo.DepartmentID, regInfo.UID).First(reg); result.RowsAffected != 0 {
+		return nil
+	}
+
 	result := db.Create(reg)
 	if result.Error != nil {
 		return result.Error
