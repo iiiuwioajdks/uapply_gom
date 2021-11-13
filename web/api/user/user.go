@@ -124,13 +124,6 @@ func UpdateResume(c *gin.Context) {
 	}
 	// 需要更新电话时校验电话
 	if req.Phone != "" {
-		//validator := validator.New()
-		//validator.RegisterValidation("mobile", validator2.ValidateMobile)
-		//err := validator.Var(req.Phone, "mobile")
-		//if err != nil {
-		//	api.Fail(c, api.CodeInvalidParam)
-		//	return
-		//}
 		ok := v2.ValidateFunc(req.Phone, v2.PHONE)
 		if !ok {
 			api.FailWithErr(c, api.CodeInvalidParam, "手机号不符合验证规则")
@@ -139,13 +132,6 @@ func UpdateResume(c *gin.Context) {
 	}
 	// 需要更新邮箱时校验邮箱
 	if req.Email != "" {
-		//validator := validator.New()
-		//validator.RegisterValidation("email", v2.ValidateEmail)
-		//err := validator.Var(req.Email, "email")
-		//if err != nil {
-		//	api.Fail(c, api.CodeInvalidParam)
-		//	return
-		//}
 		ok := v2.ValidateFunc(req.Phone, v2.PHONE)
 		if !ok {
 			api.FailWithErr(c, api.CodeInvalidParam, "邮箱不符合验证规则")
@@ -153,12 +139,6 @@ func UpdateResume(c *gin.Context) {
 		}
 	}
 	// 需要更新性别时校验性别
-	//if req.Sex != 0 {
-	//	if req.Sex != 1 && req.Sex != 2 {
-	//		api.Fail(c, api.CodeInvalidParam)
-	//		return
-	//	}
-	//}
 	if req.Sex != 0 && req.Sex != models.MALE && req.Sex != models.FEMALE {
 		api.Fail(c, api.CodeInvalidParam)
 		return
