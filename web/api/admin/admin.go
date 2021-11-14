@@ -164,3 +164,63 @@ func Get(c *gin.Context) {
 		"department_name": depInfo.DepartmentName,
 	})
 }
+
+// AddExtraEnroll 直接添加一个部员
+func AddExtraEnroll(c *gin.Context) {
+
+}
+
+// AddInterviewers 通过uid增加面试官，首先他们应该是存在且部员
+func AddInterviewers(c *gin.Context) {
+
+}
+
+// Pass 通过某一轮面试
+func Pass(c *gin.Context) {
+
+}
+
+// Out 在某一轮面试被淘汰
+func Out(c *gin.Context) {
+
+}
+
+// Enroll 在某一轮面试被录取
+func Enroll(c *gin.Context) {
+
+}
+
+// GetAllInterviewees 部门获取报名自己部门的所有用户
+func GetAllInterviewees(c *gin.Context) {
+
+}
+
+// GetInterviewee 部门获取报名自己部门的某一个用户详细信息
+func GetInterviewee(c *gin.Context) {
+
+}
+
+// GetUninterview 部门获取第n轮未面试成员
+func GetUninterview(c *gin.Context) {
+
+}
+
+// Getinterviewed 部门获取第n轮已面试成员
+func Getinterviewed(c *gin.Context) {
+
+}
+
+// GetUserEnroll 部门获取自己的通过部员
+func GetUserEnroll(c *gin.Context) {
+
+}
+
+// GetUserInfo 获取本部门男女人数，报名人数信息
+func GetUserInfo(c *gin.Context) {
+
+}
+
+// DeleteInterviewers 删除面试官
+func DeleteInterviewers(c *gin.Context) {
+
+}

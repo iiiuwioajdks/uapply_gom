@@ -13,3 +13,13 @@ type AdminReq struct {
 	Account        string `json:"account"`
 	Password       string `json:"password"`
 }
+
+// UIDForm 像AddExtraEnroll这种其实只要一个uid就够了
+type UIDForm struct {
+	UID int `json:"uid" binding:"required"`
+}
+
+// MultiUIDForm 像AddInterviewers，Pass，Out， Enroll，DeleteInterviewers 都需要 uid 数组
+type MultiUIDForm struct {
+	UID []int `json:"uids" binding:"required"`
+}
