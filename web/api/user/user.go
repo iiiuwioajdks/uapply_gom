@@ -209,3 +209,7 @@ func ClearText(c *gin.Context) {
 
 	api.Success(c, "清空自我介绍成功")
 }
+
+func CheckResume(c *gin.Context) {
+
+}
