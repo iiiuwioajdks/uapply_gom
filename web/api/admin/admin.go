@@ -37,7 +37,8 @@ func Create(c *gin.Context) {
 	err := admin_handler.CreateDep(&req)
 	if err != nil {
 		zap.S().Error("admin_handler.CreateDep()", zap.Error(err))
-		api.Fail(c, api.CodeSystemBusy)
+		// 这个可能是重复创建的索引错误，到优化阶段再改一下
+		api.FailWithErr(c, api.CodeBadRequest, err.Error())
 		return
 	}
 	// 返回给前端
