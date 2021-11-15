@@ -9,4 +9,5 @@ var (
 	ErrResumeNotExist = errors.New("简历不存在，请先填写简历")
 	ErrInvalidParam   = errors.New("参数错误")
 	ErrReRegister     = errors.New("一个组织只能报名一个部门")
+	ErrDepExist       = errors.New("部门已存在，不能重复创建")
 )

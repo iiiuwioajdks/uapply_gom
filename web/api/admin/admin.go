@@ -36,6 +36,11 @@ func Create(c *gin.Context) {
 	// 转到handler去处理
 	err := admin_handler.CreateDep(&req)
 	if err != nil {
+		// 判断错误原因是否为重复创建部门
+		if errors.Is(err, errInfo.ErrDepExist) {
+			api.FailWithErr(c, api.CodeInvalidParam, err.Error())
+			return
+		}
 		zap.S().Error("admin_handler.CreateDep()", zap.Error(err))
 		// 这个可能是重复创建的索引错误，到优化阶段再改一下
 		api.FailWithErr(c, api.CodeBadRequest, err.Error())

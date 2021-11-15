@@ -3,6 +3,7 @@ package admin_handler
 import (
 	"context"
 	"database/sql"
+	"github.com/go-sql-driver/mysql"
 	"uapply_go/web/forms"
 	"uapply_go/web/global"
 	"uapply_go/web/global/errInfo"
@@ -35,6 +36,12 @@ func CreateDep(req *forms.AdminReq) error {
 	// 存进数据库
 	result := db.Save(&dep)
 	if result.Error != nil {
+		// 判断 MySql 错误码类型，当错误码为 1062 时说明触发了 account 的唯一索引错误
+		if mysqlErr, ok := result.Error.(*mysql.MySQLError); ok {
+			if mysqlErr.Number == 1062 {
+				return errInfo.ErrDepExist
+			}
+		}
 		return result.Error
 	}
 	return nil
