@@ -13,7 +13,7 @@ import (
 // Login 面试官小程序登录
 func Login(c *gin.Context) {
 	code := c.Param("code")
-	token, err := inter_handler.Login(code)
+	token, uid, err := inter_handler.Login(code)
 	if err != nil {
 		zap.L().Error("wxapp1 login error", zap.Error(err))
 		log.Println(err)
@@ -24,5 +24,24 @@ func Login(c *gin.Context) {
 		api.Fail(c, api.CodeSystemBusy)
 		return
 	}
-	api.Success(c, token)
+	api.Success(c, gin.H{
+		"uid":   uid,
+		"token": token,
+	})
+}
+
+func Position(c *gin.Context) {
+
+}
+
+func GetUser(c *gin.Context) {
+
+}
+
+func GetDepInfo(c *gin.Context) {
+
+}
+
+func Evaluate(c *gin.Context) {
+
 }
