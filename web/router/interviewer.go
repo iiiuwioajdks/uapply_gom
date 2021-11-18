@@ -10,7 +10,7 @@ import (
 func InitInterviewerRouter(router *gin.RouterGroup) {
 	iRouter := router.Group("/interviewer")
 	{
-		iRouter.GET("/login", interviewer.Login)
+		iRouter.GET("/login/:code", interviewer.Login)
 	}
 
 	jwtIRouter := router.Group("/interviewer").Use(middleware.WXJWTAuth(), middleware.IsInterviewer())
