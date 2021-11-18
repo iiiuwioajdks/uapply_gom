@@ -29,7 +29,7 @@ func InitAdminRouter(router *gin.RouterGroup) {
 
 		adminr.GET("/getdep", admin.Get)                           //获取当前部门粗略信息
 		adminr.GET("/getusers/register", admin.GetAllInterviewees) // 部门获取报名自己部门的所有用户
-		adminr.GET("/getuser/register", admin.GetInterviewee)      // 部门获取报名自己部门的某一个用户详细信息
+		adminr.GET("/getuser/register/:uid", admin.GetInterviewee) // 部门获取报名自己部门的某一个用户详细信息
 		adminr.GET("/getuser/unreview/:num", admin.GetUninterview) // 部门获取第n轮未面试成员
 		adminr.GET("/getuser/reviewed/:num", admin.Getinterviewed) // 部门获取第n轮已面试成员
 		adminr.GET("/getuser/enroll", admin.GetUserEnroll)         // 部门获取自己的通过部员
