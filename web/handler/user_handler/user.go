@@ -189,6 +189,7 @@ func ClearText(req *forms.UserInfoReq) error {
 // SaveTmpResume 临时保存简历
 func SaveTmpResume(tmp *forms.UserResumeInfo) error {
 	// 首先判断他有没有提交简历了
+	rdb := global.Rdb
 	exist, err := CheckIfResume(tmp.UID)
 	if err != nil && err != sql.ErrNoRows {
 		return err
@@ -203,13 +204,14 @@ func SaveTmpResume(tmp *forms.UserResumeInfo) error {
 		return err
 	}
 	// 原子性处理
-	res := global.Rdb.SetEX(context.Background(), strconv.Itoa(int(tmp.UID)), string(tmpByte[:]), Week)
+	res := rdb.SetEX(context.Background(), strconv.Itoa(int(tmp.UID)), string(tmpByte[:]), Week)
 	return res.Err()
 }
 
 // CheckIfResume 检查简历是否保存
 func CheckIfResume(uid int32) (bool, error) {
-	res := global.DB.Model(models.UserInfo{}).First(&models.UserInfo{}, uid)
+	db := global.DB
+	res := db.Model(models.UserInfo{}).First(&models.UserInfo{}, uid)
 	if res.Error != nil && res.Error.Error() != "record not found" {
 		return false, res.Error
 	}
@@ -218,7 +220,8 @@ func CheckIfResume(uid int32) (bool, error) {
 
 // GetTmpResume 获得草稿箱简历
 func GetTmpResume(uid int32) (*forms.UserResumeInfo, error) {
-	res := global.Rdb.Get(context.Background(), strconv.Itoa(int(uid)))
+	rdb := global.Rdb
+	res := rdb.Get(context.Background(), strconv.Itoa(int(uid)))
 	if res.Err() != nil {
 		if res.Err() == redis.Nil {
 			return nil, redis.Nil
