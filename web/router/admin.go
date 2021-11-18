@@ -13,14 +13,16 @@ func InitAdminRouter(router *gin.RouterGroup) {
 	{
 		// 首先需要判断 num 的值，只能为1和2，1是第一轮面试，2 是第二轮面试
 		adminr.POST("/create/people", admin.AddExtraEnroll) // 添加增加部员信息接口
+
 		// 增加面试官,interviewer表的uid是面试官小程序上的uid，在一个人变为面试官后
 		// 把staff_info表的uid更新为interviewer表的uid
 		// 只有在staff_info中的员工才能被更新为面试官
 		adminr.POST("/interviewer/add", admin.AddInterviewers)
+
 		adminr.POST("/interview/sms/:num")                  // 发送第n轮面试短信
 		adminr.POST("/interview/email/:num")                // 发送第n轮面试邮件
 		adminr.POST("/interview/pass/:num", admin.Pass)     // 通过第n轮面试
-		adminr.POST("/interview/out/:num", admin.Out)       // 在第n轮面试时直接淘汰，进行数据库软删除
+		adminr.POST("/interview/out/:num", admin.Out)       // 在第n轮面试时直接淘汰，进行数据库删除
 		adminr.POST("/interview/enroll/:num", admin.Enroll) // 在第n轮面试时加入暂录取名单，加入部员名单
 
 		adminr.PATCH("/udpdep", admin.Update) // 根据部门id更新部门信息
