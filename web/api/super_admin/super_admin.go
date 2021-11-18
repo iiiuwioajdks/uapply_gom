@@ -36,7 +36,7 @@ func Update(c *gin.Context) {
 	var req forms.UpdateSAdmin
 	if err := c.ShouldBindJSON(&req); err != nil {
 		zap.S().Info(err)
-		api.Fail(c, api.CodeInvalidParam)
+		api.HandleValidatorError(c, err)
 		return
 	}
 	claim, ok := c.Get("claim")
@@ -49,8 +49,12 @@ func Update(c *gin.Context) {
 	req.OrganizationID = claimInfo.OrganizationID
 	err := super_admin_handler.Update(&req)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.FailWithErr(c, api.CodeInvalidParam, err.Error())
+			return
+		}
 		zap.S().Info(err)
-		api.FailWithErr(c, api.CodeInvalidParam, err.Error())
+		api.FailWithErr(c, api.CodeSystemBusy, err.Error())
 		return
 	}
 	api.Success(c, "组织信息更新成功")
@@ -72,8 +76,10 @@ func GetOrg(c *gin.Context) {
 		api.Fail(c, api.CodeInvalidParam)
 		return
 	}
-
-	api.Success(c, orgInfo)
+	rsp := make(map[string]string, 2)
+	rsp["org_name"] = orgInfo.OrganizationName
+	rsp["create_time"] = orgInfo.CreatedAt.Format("2006-01-02")
+	api.Success(c, rsp)
 }
 
 // GetOrgDep 根据组织获取其下的附属部门

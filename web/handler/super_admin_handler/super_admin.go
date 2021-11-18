@@ -40,35 +40,33 @@ func Create(csa *forms.CreateSAdmin) error {
 func Update(req *forms.UpdateSAdmin) error {
 	db := global.DB
 	// 更新 Organization 的信息
-	var orgModel models.Organization
 	if req.OrganizationName != "" {
+		var orgModel models.Organization
 		orgModel.OrganizationName = req.OrganizationName
-	}
-	result := db.Model(&models.Organization{}).Omit("organization_id").Where("organization_id = ?", req.OrganizationID).
-		Updates(&orgModel)
-	// rowsAffected 等于 0 说明参数有误
-	if result.RowsAffected == 0 {
-		return sql.ErrNoRows
-	}
-	if result.Error != nil {
-		return result.Error
+		result := db.Model(&models.Organization{}).Omit("organization_id").Where("organization_id = ?", req.OrganizationID).
+			Updates(&orgModel)
+		// rowsAffected 等于 0 说明参数有误
+		if result.RowsAffected == 0 {
+			return sql.ErrNoRows
+		}
+		if result.Error != nil {
+			return result.Error
+		}
 	}
 
-	// 更新 Organization 在department表的信息，即更新账号和密码
-	var depModel models.Department
-	if req.Account != "" && req.Password != "" {
-		depModel.DepartmentName = orgModel.OrganizationName + "-admin"
+	if req.Account != "" || req.Password != "" {
+		var depModel models.Department
 		depModel.Account = req.Account
 		depModel.Password = req.Password
-	}
-	result = db.Model(&models.Department{}).Omit("department_id").Where("department_id = ?", req.DepartmentID).
-		Updates(&depModel)
-	// rowsAffected 等于 0 说明参数有误
-	if result.RowsAffected == 0 {
-		return sql.ErrNoRows
-	}
-	if result.Error != nil {
-		return result.Error
+		result := db.Model(&models.Department{}).Omit("organization_id", "department_id").
+			Where("organization_id=? and role=1", req.OrganizationID).
+			Updates(depModel)
+		if result.RowsAffected == 0 {
+			return sql.ErrNoRows
+		}
+		if result.Error != nil {
+			return result.Error
+		}
 	}
 	return nil
 }
@@ -118,7 +116,7 @@ func GetOrganizationInfo(orgid string) (*models.Organization, error) {
 
 	// 从数据库中获取组织信息
 	var org models.Organization
-	result := db.Select("organization_id", "organization_name").Where("organization_id = ?", orgid).First(&org)
+	result := db.Select("organization_name", "created_at").Where("organization_id = ?", orgid).First(&org)
 
 	// 数据库的查询错误
 	if result.Error != nil {

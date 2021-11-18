@@ -147,7 +147,8 @@ func Get(c *gin.Context) {
 	// 获取 claims
 	claim, ok := c.Get("claim")
 	if !ok {
-		zap.S().Info(claim)
+		api.Fail(c, api.CodeSystemBusy)
+		return
 	}
 	claimInfo := claim.(*jwt2.Claims)
 	//获取 depid

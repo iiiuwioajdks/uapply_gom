@@ -161,7 +161,7 @@ func GetResume(uid int32) (*forms.UserInfoReq, error) {
 
 	resume := new(forms.UserInfoReq)
 	// 查询数据
-	result := db.Table("user_info").Where("uid = ?", uid).First(resume)
+	result := db.Model(&models.UserInfo{}).Where("uid = ?", uid).First(resume)
 	if result.Error != nil {
 		return nil, result.Error
 	}

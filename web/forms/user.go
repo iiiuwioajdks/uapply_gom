@@ -5,8 +5,8 @@ type UserInfoReq struct {
 	UID     int32  `json:"uid"`
 	Name    string `json:"name" binding:"required"`
 	StuNum  string `json:"stu_num" binding:"required"`
-	Address string `json:"address"`
-	Major   string `json:"major"`
+	Address string `json:"address,omitempty"`
+	Major   string `json:"major,omitempty"`
 	Phone   string `json:"phone" binding:"required,mobile"`
 	Email   string `json:"email" binding:"required,email"`
 	Sex     int8   `json:"sex" binding:"required,oneof=1 2"` // 1为男，2为女
