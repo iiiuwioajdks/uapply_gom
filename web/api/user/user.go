@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"log"
@@ -65,7 +66,32 @@ func SaveResume(c *gin.Context) {
 }
 
 func SaveTmpResume(c *gin.Context) {
-
+	// 绑定参数
+	var tmpResume forms.UserResumeInfo
+	err := c.ShouldBindJSON(&tmpResume)
+	if err != nil {
+		api.HandleValidatorError(c, err)
+		return
+	}
+	wxClaim, ok := c.Get("wxClaim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	info := wxClaim.(*jwt2.WXClaims)
+	tmpResume.UID = info.UID
+	// 移交handler处理
+	err = user_handler.SaveTmpResume(&tmpResume)
+	if err != nil {
+		if errors.Is(err, errInfo.ErrResumeExist) {
+			api.FailWithErr(c, api.CodeBadRequest, "简历已存在，不可保存草稿")
+			return
+		}
+		zap.S().Error("api.user.SaveTmpResume:", err)
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, nil)
 }
 
 func Register(c *gin.Context) {
@@ -119,7 +145,22 @@ func GetRegStatus(c *gin.Context) {
 }
 
 func GetTmpResume(c *gin.Context) {
-
+	claim, ok := c.Get("wxClaim")
+	if !ok {
+		zap.S().Info(claim)
+	}
+	wxClaim := claim.(*jwt2.WXClaims)
+	res, err := user_handler.GetTmpResume(wxClaim.UID)
+	if err != nil {
+		if err == redis.Nil {
+			api.Success(c, nil)
+			return
+		}
+		zap.S().Error("api.user.GetTmpResume:", err)
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, res)
 }
 
 func GetResume(c *gin.Context) {
@@ -210,6 +251,17 @@ func ClearText(c *gin.Context) {
 	api.Success(c, "清空自我介绍成功")
 }
 
+// CheckResume 检查是否已经填写简历
 func CheckResume(c *gin.Context) {
-
+	claim, ok := c.Get("wxClaim")
+	if !ok {
+		zap.S().Info(claim)
+	}
+	wxClaim := claim.(*jwt2.WXClaims)
+	exist, err := user_handler.CheckIfResume(wxClaim.UID)
+	if err != nil {
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, exist)
 }

@@ -2,17 +2,25 @@ package user_handler
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 	"uapply_go/web/forms"
 	"uapply_go/web/global"
 	"uapply_go/web/global/errInfo"
 	"uapply_go/web/middleware"
 	"uapply_go/web/models"
 	"uapply_go/web/models/jwt"
+)
+
+const (
+	Week = time.Hour * 24 * 7
 )
 
 func Login(code string) (token string, uid int32, err error) {
@@ -176,4 +184,52 @@ func ClearText(req *forms.UserInfoReq) error {
 
 	return nil
 
+}
+
+// SaveTmpResume 临时保存简历
+func SaveTmpResume(tmp *forms.UserResumeInfo) error {
+	// 首先判断他有没有提交简历了
+	exist, err := CheckIfResume(tmp.UID)
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+	if exist {
+		return errInfo.ErrResumeExist
+	}
+
+	tmpByte, err := json.Marshal(tmp)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	// 原子性处理
+	res := global.Rdb.SetEX(context.Background(), strconv.Itoa(int(tmp.UID)), string(tmpByte[:]), Week)
+	return res.Err()
+}
+
+// CheckIfResume 检查简历是否保存
+func CheckIfResume(uid int32) (bool, error) {
+	res := global.DB.Model(models.UserInfo{}).First(&models.UserInfo{}, uid)
+	if res.Error != nil && res.Error.Error() != "record not found" {
+		return false, res.Error
+	}
+	return res.RowsAffected == 1, nil
+}
+
+// GetTmpResume 获得草稿箱简历
+func GetTmpResume(uid int32) (*forms.UserResumeInfo, error) {
+	res := global.Rdb.Get(context.Background(), strconv.Itoa(int(uid)))
+	if res.Err() != nil {
+		if res.Err() == redis.Nil {
+			return nil, redis.Nil
+		}
+		return nil, res.Err()
+	}
+
+	var u forms.UserResumeInfo
+	err := json.Unmarshal([]byte(res.Val()), &u)
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
 }
