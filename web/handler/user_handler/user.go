@@ -236,3 +236,23 @@ func GetTmpResume(uid int32) (*forms.UserResumeInfo, error) {
 	}
 	return &u, nil
 }
+
+func JudgeTime(req *forms.UserRegisterInfo) error {
+	db := global.DB
+	var dep models.Department
+	// 先查部门
+	db.First(&dep, req.DepartmentID)
+
+	time := time.Now().Unix()
+
+	// 如果你没设置报名开始时间，我就默认你啥时候都能报名
+	if dep.StartTime == 0 {
+		return nil
+	}
+	// 否则我就要判断你这个时间合不合法
+	if time < dep.StartTime || time > dep.EndTime {
+		return errInfo.ErrCNotReg
+	}
+
+	return nil
+}

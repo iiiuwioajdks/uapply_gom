@@ -23,3 +23,8 @@ type UIDForm struct {
 type MultiUIDForm struct {
 	UID []int `json:"uids" binding:"required"`
 }
+
+type Time struct {
+	Start int64 `binding:"required" json:"start"`
+	End   int64 `binding:"required" json:"end"`
+}

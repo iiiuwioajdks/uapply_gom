@@ -112,3 +112,14 @@ func GetDepRoughDetail(depid int) (*forms.AdminReq, error) {
 	}
 	return depInfo, nil
 }
+
+// SetTime 设置报名时间
+func SetTime(did int, t *forms.Time) error {
+	db := global.DB
+	dep := models.Department{
+		StartTime: t.Start,
+		EndTime:   t.End,
+	}
+	res := db.Model(&models.Department{}).Where("department_id=?", did).Updates(&dep)
+	return res.Error
+}

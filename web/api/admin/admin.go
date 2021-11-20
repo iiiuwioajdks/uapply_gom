@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"time"
 	"uapply_go/web/api"
 	"uapply_go/web/forms"
 	"uapply_go/web/global/errInfo"
@@ -75,7 +76,12 @@ func Login(c *gin.Context) {
 		return
 	}
 	// 返回token给前端
-	api.Success(c, token)
+	api.Success(c, gin.H{
+		"token":           token,
+		"department_id":   admin.DepartmentID,
+		"organization_id": admin.OrganizationID,
+		"role":            admin.Role,
+	})
 }
 
 // Update 部门更新
@@ -230,4 +236,32 @@ func GetUserInfo(c *gin.Context) {
 // DeleteInterviewers 删除面试官
 func DeleteInterviewers(c *gin.Context) {
 
+}
+
+// SetTime 设置报名开始和结束时间,部门可以通过这个接口设置报名时间
+func SetTime(c *gin.Context) {
+	var t forms.Time
+	err := c.ShouldBindJSON(&t)
+	if err != nil {
+		api.HandleValidatorError(c, err)
+		return
+	}
+	if time.Now().Unix() > t.End || t.End < t.Start {
+		api.FailWithErr(c, api.CodeBadRequest, "无效的设置")
+		return
+	}
+
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimsInfo := claim.(*jwt2.Claims)
+
+	err = admin_handler.SetTime(claimsInfo.DepartmentID, &t)
+	if err != nil {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	api.Success(c, nil)
 }

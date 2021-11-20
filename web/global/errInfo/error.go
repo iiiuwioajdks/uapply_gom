@@ -10,4 +10,5 @@ var (
 	ErrInvalidParam   = errors.New("参数错误")
 	ErrReRegister     = errors.New("一个组织只能报名一个部门")
 	ErrDepExist       = errors.New("部门已存在，不能重复创建")
+	ErrCNotReg        = errors.New("该时间段无法报名该部门")
 )

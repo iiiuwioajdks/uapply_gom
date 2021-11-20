@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"time"
 	"uapply_go/web/api"
 	"uapply_go/web/forms"
 	"uapply_go/web/handler/super_admin_handler"
@@ -176,4 +177,32 @@ func GetDepDetail(c *gin.Context) {
 // GetAllUserStatistic 获得一个组织下所有报名人数和男女信息
 func GetAllUserStatistic(c *gin.Context) {
 
+}
+
+// SetTime 组织统一设定面试时间
+func SetTime(c *gin.Context) {
+	var t forms.Time
+	err := c.ShouldBindJSON(&t)
+	if err != nil {
+		api.HandleValidatorError(c, err)
+		return
+	}
+	if time.Now().Unix() > t.End || t.End < t.Start {
+		api.FailWithErr(c, api.CodeBadRequest, "无效的设置")
+		return
+	}
+
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimsInfo := claim.(*jwt.Claims)
+
+	err = super_admin_handler.SetTime(claimsInfo.OrganizationID, &t)
+	if err != nil {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	api.Success(c, nil)
 }

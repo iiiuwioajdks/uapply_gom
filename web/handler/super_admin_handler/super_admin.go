@@ -141,3 +141,13 @@ func GetOrgDepartments(orgid int) ([]*models.Department, error) {
 
 	return deps, nil
 }
+
+func SetTime(orgid int, t *forms.Time) error {
+	db := global.DB
+	dep := models.Department{
+		StartTime: t.Start,
+		EndTime:   t.End,
+	}
+	res := db.Model(&models.Department{}).Where("organization_id=?", orgid).Updates(&dep)
+	return res.Error
+}

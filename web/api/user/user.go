@@ -114,8 +114,15 @@ func Register(c *gin.Context) {
 	// 绑定UID
 	regInfo.UID = wxClaimInfo.UID
 
+	// 判断是否在报名时间内
+	err := user_handler.JudgeTime(&regInfo)
+	if err != nil {
+		api.FailWithErr(c, api.CodeBadRequest, err.Error())
+		return
+	}
+
 	// 转移handler
-	err := user_handler.Register(&regInfo)
+	err = user_handler.Register(&regInfo)
 	if err != nil {
 		if errors.Is(err, errInfo.ErrResumeNotExist) {
 			api.FailWithErr(c, api.CodeBadRequest, err.Error())

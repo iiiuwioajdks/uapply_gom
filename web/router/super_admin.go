@@ -13,7 +13,8 @@ func InitSuperAdminRouter(router *gin.RouterGroup) {
 	{
 		// 超级管理员路由
 		//uGroup.DELETE("/superadmin") //  超级管理员（组织）的注销,暂时不做支持
-		SuperAdmin.POST("/credep", admin.Create)                          // 部门（admin）的创建
+		SuperAdmin.POST("/credep", admin.Create) // 部门（admin）的创建
+		SuperAdmin.POST("/settime", super_admin.SetTime)
 		SuperAdmin.PATCH("/udporg", super_admin.Update)                   // 根据组织id更新组织信息
 		SuperAdmin.GET("/getdep/detail/:depid", super_admin.GetDepDetail) // 最高权限获取部门信息,包括账号密码
 		SuperAdmin.DELETE("/deldep/:depid", super_admin.Delete)           // admin，即部门的删除

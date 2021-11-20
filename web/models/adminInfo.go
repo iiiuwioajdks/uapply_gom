@@ -20,6 +20,8 @@ type Department struct {
 	Account        string `gorm:"unique;type:varchar(20);not null"`
 	Password       string `gorm:"type:varchar(20);not null"`
 	Role           int8   `gorm:"type:int;not null comment '0代表管理员，1代表超级管理员'"`
+	StartTime      int64
+	EndTime        int64
 }
 
 type OrganizationBase struct {
