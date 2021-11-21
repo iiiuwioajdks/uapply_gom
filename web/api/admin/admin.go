@@ -153,7 +153,7 @@ func Get(c *gin.Context) {
 	// 获取 claims
 	claim, ok := c.Get("claim")
 	if !ok {
-		api.Fail(c, api.CodeSystemBusy)
+		api.Fail(c, api.CodeInvalidParam)
 		return
 	}
 	claimInfo := claim.(*jwt2.Claims)
@@ -164,7 +164,7 @@ func Get(c *gin.Context) {
 	depInfo, err := admin_handler.GetDepRoughDetail(depid)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			api.Fail(c, api.CodeInvalidParam)
+			api.Fail(c, api.CodeBadRequest)
 			return
 		}
 		zap.S().Error("admin_handler.GetDepRoughDetail()", zap.Error(err))
@@ -218,7 +218,7 @@ func GetInterviewee(c *gin.Context) {
 
 	claim, ok := c.Get("claim")
 	if !ok {
-		api.Fail(c, api.CodeInvalidParam)
+		api.Fail(c, api.CodeBadRequest)
 		return
 	}
 	claimInfo := claim.(*jwt2.Claims)

@@ -126,15 +126,14 @@ func GetInterviewee(uid string, depid int, orgid int) (*models.UserInfo, error) 
 
 	// 在用户表中查找用户信息
 	result := db.Model(models.UserInfo{}).Where("uid = ?", uid).First(&userInfo)
-	if result.Error != nil {
-		return nil, result.Error
-	}
 	if result.RowsAffected == 0 {
 		return nil, sql.ErrNoRows
 	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
 
 	return userInfo, nil
-
 }
 
 // SetTime 设置报名时间
