@@ -89,25 +89,26 @@ func GetUser(useUid string, interUid int32) (*models.UserInfo, error) {
 	// 中间件已经证明这个是面试官了 肯定在表里面不用判断了
 	var interAuth []models.Interviewers
 	if result := db.Model(&models.Interviewers{}).Where("uid = ?", interUid).Find(&interAuth); result.Error != nil {
-		//查询错误
+		// 查询错误
 		return nil, result.Error
 	}
 
-	//一个人承担多个组织或部门的面试官
-	//确定这个用户是这个面试官来面试（确定组织id和部门id是否相同）
+	// 一个人承担多个组织或部门的面试官
+	// 确定这个用户是这个面试官来面试（确定组织id和部门id是否相同）
 	var flag bool = false
 	for _, interviewers := range interAuth {
 		if interviewers.OrganizationID == userAuth.OrganizationID && interviewers.DepartmentID == userAuth.DepartmentID {
 			flag = true
+			break
 		}
 	}
 
 	if flag {
 		var useMsg models.UserInfo
-		//能来面试前面已经判断过简历表中有信息 不用再做判断
+		// 能来面试前面已经判断过简历表中有信息 不用再做判断
 		result := db.Model(&models.UserInfo{}).Where("uid = ?", userAuth.UID).First(&useMsg)
 		if result.Error != nil {
-			//查询错误
+			// 查询错误
 			return nil, result.Error
 		}
 		return &useMsg, nil
