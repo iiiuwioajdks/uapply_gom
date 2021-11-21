@@ -210,6 +210,37 @@ func GetAllInterviewees(c *gin.Context) {
 
 // GetInterviewee 部门获取报名自己部门的某一个用户详细信息
 func GetInterviewee(c *gin.Context) {
+	uid, ok := c.Params.Get("uid")
+	if !ok {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	//获取 depid orgid
+	depid := claimInfo.DepartmentID
+	orgid := claimInfo.OrganizationID
+
+	userInfo, err := admin_handler.GetInterviewee(uid, depid, orgid)
+	if err != nil {
+		if errors.Is(err, errInfo.ErrUserNotFind) {
+			api.FailWithErr(c, api.CodeInvalidParam, "部门内未查找到此用户")
+			return
+		}
+		if errors.Is(err, sql.ErrNoRows) {
+			api.FailWithErr(c, api.CodeInvalidParam, "用户表中无此用户")
+			return
+		}
+		api.Fail(c, api.CodeSystemBusy)
+
+	}
+
+	api.Success(c, userInfo)
 
 }
 

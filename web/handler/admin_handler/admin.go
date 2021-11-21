@@ -113,6 +113,30 @@ func GetDepRoughDetail(depid int) (*forms.AdminReq, error) {
 	return depInfo, nil
 }
 
+func GetInterviewee(uid string, depid int, orgid int) (*models.UserInfo, error) {
+	db := global.DB
+
+	var userInfo *models.UserInfo
+
+	// 判断用户是否报名本部门
+	var count int64
+	if db.Model(models.UserRegister{}).Where("organization_id = ? and department_id = ? and uid = ?", orgid, depid, uid).Count(&count); count == 0 {
+		return nil, errInfo.ErrUserNotFind
+	}
+
+	// 在用户表中查找用户信息
+	result := db.Model(models.UserInfo{}).Where("uid = ?", uid).First(&userInfo)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return userInfo, nil
+
+}
+
 // SetTime 设置报名时间
 func SetTime(did int, t *forms.Time) error {
 	db := global.DB
