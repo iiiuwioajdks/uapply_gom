@@ -91,6 +91,7 @@ func DeleteDepartment(depid string, orgid int) error {
 	return nil
 }
 
+// ShowConcreteDepartInfo 获取部门的详细信息
 func ShowConcreteDepartInfo(depid string, orgid int) (*forms.AdminReq, error) {
 	// 获取DB
 	db := global.DB

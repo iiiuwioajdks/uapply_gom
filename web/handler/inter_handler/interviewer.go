@@ -2,6 +2,7 @@ package inter_handler
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -72,4 +73,38 @@ func Login(code string) (token string, uid int32, err error) {
 // Check 检查是否是部长（面试官，是就设数据库role为1，否则设为0）
 func Check() error {
 	return nil
+}
+
+// GetUser 查询用户的简历
+func GetUser(useUid string, interUid int32) (*models.UserInfo, error) {
+	db := global.DB
+
+	// 查找用户的报名时所填报的组织和部门
+	var userAuth models.UserRegister
+	if result := db.Model(&models.UserRegister{}).Where("uid = ?", useUid).First(&userAuth); result.RowsAffected == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	// 查找面试官所在的组织和部门
+	// 中间件已经证明这个是面试官了 肯定在表里面不用判断了
+	var interAuth models.Interviewers
+	if result := db.Model(&models.Interviewers{}).Where("uid = ?", interUid).First(&interAuth); result.Error != nil {
+		//查询错误
+		return nil, result.Error
+	}
+
+	//确定这个用户是这个面试官来面试（确定组织id和部门id是否相同）
+	if userAuth.OrganizationID == interAuth.OrganizationID && userAuth.DepartmentID == interAuth.DepartmentID {
+		var useMsg models.UserInfo
+		//能来面试前面已经判断过简历表中有信息 不用再做判断
+		result := db.Model(&models.UserInfo{}).Where("uid = ?", userAuth.UID).First(&useMsg)
+		if result.Error != nil {
+			//查询错误
+			return nil, result.Error
+		}
+		return &useMsg, nil
+	} else {
+		// 这个用户报名的时候不是这个部门或组织
+		return nil, errInfo.ErrUserMatch
+	}
 }
