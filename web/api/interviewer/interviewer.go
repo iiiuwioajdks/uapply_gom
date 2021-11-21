@@ -2,7 +2,6 @@ package interviewer
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -48,7 +47,8 @@ func GetUser(c *gin.Context) {
 	// 获取token
 	claim, ok := c.Get("wxClaim")
 	if !ok {
-		fmt.Println(claim)
+		api.Fail(c, api.CodeBadRequest)
+		return
 	}
 	claimInfo := claim.(*jwt.WXClaims)
 	interUid := claimInfo.UID
