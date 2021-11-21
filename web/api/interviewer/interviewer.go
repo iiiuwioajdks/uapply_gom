@@ -59,14 +59,14 @@ func GetUser(c *gin.Context) {
 		if errors.Is(err, sql.ErrNoRows) {
 			api.Fail(c, api.CodeUserNotExist)
 			return
-		} else if errors.Is(err, errInfo.ErrUserMatch) {
+		}
+		if errors.Is(err, errInfo.ErrUserMatch) {
 			api.Fail(c, api.CodeHasNotPower)
 			return
-		} else {
-			api.Fail(c, api.CodeSystemBusy)
-			zap.S().Error("inter_handler.GetUser(userUid,interUid)", zap.Error(err))
-			return
 		}
+		api.Fail(c, api.CodeSystemBusy)
+		zap.S().Error("inter_handler.GetUser(userUid,interUid)", zap.Error(err))
+		return
 	}
 	api.Success(c, useMsg)
 }
