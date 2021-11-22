@@ -147,3 +147,34 @@ func SetTime(did int, t *forms.Time) error {
 	res := db.Model(&models.Department{}).Where("department_id=?", did).Updates(&dep)
 	return res.Error
 }
+
+func GetUserInfo(depid int, orgid int) (sum int64, males int64, females int64, err error) {
+	db := global.DB
+	var users []*models.UserRegister
+	// 本部门的报名人数,并保存uid
+	result := db.Model(&models.UserRegister{}).Select("uid").Where("organization_id = ? and department_id = ?", orgid, depid).Find(&users).Count(&sum)
+	if result.Error != nil {
+		return 0, 0, 0, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return 0, 0, 0, sql.ErrNoRows
+	}
+
+	var flag int64
+	// 报名人数中的男生数
+	for _, user := range users {
+		// 如果是男生，flag 变1
+		flag = 0
+		result := db.Model(&models.UserInfo{}).Where("uid = ? and sex = ?", user.UID, 1).Count(&flag)
+		if flag == 1 {
+			males++
+		}
+		if result.Error != nil {
+			return 0, 0, 0, result.Error
+		}
+	}
+	// 报名人数中的女生数
+	females = sum - males
+
+	return sum, males, females, nil
+}

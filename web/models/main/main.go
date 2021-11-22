@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	dsn := fmt.Sprintf("root:557320@tcp(localhost:3306)/uapply?charset=utf8&parseTime=True&loc=Local")
+	dsn := fmt.Sprintf("root:123456@tcp(localhost:3306)/uapply?charset=utf8&parseTime=True&loc=Local")
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		logger.Config{
