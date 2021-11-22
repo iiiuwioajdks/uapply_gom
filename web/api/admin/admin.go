@@ -205,7 +205,27 @@ func Enroll(c *gin.Context) {
 
 // GetAllInterviewees 部门获取报名自己部门的所有用户
 func GetAllInterviewees(c *gin.Context) {
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	// 获取 orgid 和 depid
+	orgid := claimInfo.OrganizationID
+	depid := claimInfo.DepartmentID
 
+	interviewees, err := admin_handler.GetAllInterviewees(depid, orgid)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.FailWithErr(c, api.CodeInvalidParam, "该部门还没有已报名的用户")
+			return
+		}
+		zap.S().Error("admin_handler.GetAllInterviewees()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, interviewees)
 }
 
 // GetInterviewee 部门获取报名自己部门的某一个用户详细信息

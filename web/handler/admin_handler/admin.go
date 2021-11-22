@@ -8,6 +8,7 @@ import (
 	"uapply_go/web/global"
 	"uapply_go/web/global/errInfo"
 	"uapply_go/web/models"
+	"uapply_go/web/models/response"
 )
 
 func Login(ctx context.Context, loginInfo *forms.Login) (*models.Department, error) {
@@ -135,6 +136,23 @@ func GetInterviewee(uid string, depid int, orgid int) (*models.UserInfo, error) 
 
 	return userInfo, nil
 
+}
+
+func GetAllInterviewees(orgid, depid int) ([]response.IntervieweeRsp, error) {
+	db := global.DB
+
+	var interviewees []response.IntervieweeRsp
+	// 从 user_info 和 user_register 两张表里查数据
+	result := db.Table("user_register as ur").Joins("inner join user_info as ui on ur.uid = ui.uid").Where("ur.organization_id = ? and ur.department_id = ?", orgid, depid).Scan(&interviewees)
+
+	// 没有已报名的用户
+	if result.RowsAffected == 0 {
+		return nil, sql.ErrNoRows
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return interviewees, nil
 }
 
 // SetTime 设置报名时间
