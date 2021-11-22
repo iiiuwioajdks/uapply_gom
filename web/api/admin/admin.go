@@ -286,7 +286,6 @@ func GetUserInfo(c *gin.Context) {
 		"males":   males,
 		"females": females,
 	})
-
 }
 
 // DeleteInterviewers 删除面试官
