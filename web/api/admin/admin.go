@@ -205,7 +205,27 @@ func Enroll(c *gin.Context) {
 
 // GetAllInterviewees 部门获取报名自己部门的所有用户
 func GetAllInterviewees(c *gin.Context) {
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	// 获取 orgid 和 depid
+	orgid := claimInfo.OrganizationID
+	depid := claimInfo.DepartmentID
 
+	interviewees, err := admin_handler.GetAllInterviewees(depid, orgid)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.FailWithErr(c, api.CodeInvalidParam, "该部门还没有已报名的用户")
+			return
+		}
+		zap.S().Error("admin_handler.GetAllInterviewees()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, interviewees)
 }
 
 // GetInterviewee 部门获取报名自己部门的某一个用户详细信息
@@ -261,7 +281,31 @@ func GetUserEnroll(c *gin.Context) {
 
 // GetUserInfo 获取本部门男女人数，报名人数信息
 func GetUserInfo(c *gin.Context) {
+	// 获取claims
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	// 获取depid 和 orgid
+	depid := claimInfo.DepartmentID
+	orgid := claimInfo.OrganizationID
+	sum, males, females, err := admin_handler.GetUserInfo(depid, orgid)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.FailWithErr(c, api.CodeUserNotExist, "本部门暂无人报名")
+			return
+		}
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
 
+	api.Success(c, gin.H{
+		"sum":     sum,
+		"males":   males,
+		"females": females,
+	})
 }
 
 // DeleteInterviewers 删除面试官
