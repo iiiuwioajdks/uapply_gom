@@ -2,6 +2,7 @@ package global
 
 import (
 	ut "github.com/go-playground/universal-translator"
+	"github.com/go-redsync/redsync/v4"
 	"uapply_go/web/config"
 )
 
@@ -9,3 +10,5 @@ import (
 var Conf config.ServerConf
 
 var Trans ut.Translator
+
+var Rs *redsync.Redsync

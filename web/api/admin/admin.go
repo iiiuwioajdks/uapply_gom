@@ -183,7 +183,7 @@ func AddExtraEnroll(c *gin.Context) {
 
 }
 
-// AddInterviewers 通过uid增加面试官，首先他们应该是存在且部员
+// AddInterviewers 通过uid增加面试官，首先他应该是存在且部员
 func AddInterviewers(c *gin.Context) {
 
 }

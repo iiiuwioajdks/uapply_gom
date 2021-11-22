@@ -132,15 +132,21 @@ func Register(regInfo *forms.UserRegisterInfo) error {
 		return errInfo.ErrInvalidParam
 	}
 
+	mutex := global.Rs.NewMutex(fmt.Sprintf("reg_%d", reg.UID))
+	err := mutex.Lock()
+	if err != nil {
+		return err
+	}
 	// 不可重复报名某一组织
 	if db.Model(models.UserRegister{}).Where("uid=? and organization_id=?", regInfo.UID, regInfo.OrganizationID).Count(&count); count != 0 {
 		return errInfo.ErrReRegister
 	}
-
 	if result := db.Create(&reg); result.Error != nil {
 		return result.Error
 	}
-
+	if ok, err := mutex.Unlock(); !ok || err != nil {
+		return errInfo.ErrSystem
+	}
 	return nil
 }
 

@@ -127,10 +127,12 @@ func Register(c *gin.Context) {
 		if errors.Is(err, errInfo.ErrResumeNotExist) {
 			api.FailWithErr(c, api.CodeBadRequest, err.Error())
 			return
-		} else if errors.Is(err, errInfo.ErrInvalidParam) {
+		}
+		if errors.Is(err, errInfo.ErrInvalidParam) {
 			api.FailWithErr(c, api.CodeBadRequest, "组织或部门已不存在")
 			return
-		} else if errors.Is(err, errInfo.ErrReRegister) {
+		}
+		if errors.Is(err, errInfo.ErrReRegister) {
 			api.FailWithErr(c, api.CodeBadRequest, "不可重复报名同一组织")
 			return
 		}
@@ -138,9 +140,7 @@ func Register(c *gin.Context) {
 		api.Fail(c, api.CodeSystemBusy)
 		return
 	}
-
 	api.Success(c, "用户报名成功")
-
 }
 
 func GetRegInfo(c *gin.Context) {

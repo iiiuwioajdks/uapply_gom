@@ -36,6 +36,7 @@ func Position(c *gin.Context) {
 
 }
 
+// GetUser 获取用户简历
 func GetUser(c *gin.Context) {
 	// 获取参数
 	userUid, ok := c.Params.Get("uid")

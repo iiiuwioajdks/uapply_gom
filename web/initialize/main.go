@@ -33,5 +33,7 @@ func Init() *gin.Engine {
 	if err != nil {
 		panic(err)
 	}
+	// redis分布式锁初始化
+	InitRedsync()
 	return Router
 }

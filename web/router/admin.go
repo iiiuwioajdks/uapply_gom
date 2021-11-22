@@ -17,6 +17,7 @@ func InitAdminRouter(router *gin.RouterGroup) {
 		// 增加面试官,interviewer表的uid是面试官小程序上的uid，在一个人变为面试官后
 		// 把staff_info表的uid更新为interviewer表的uid
 		// 只有在staff_info中的员工才能被更新为面试官
+		// 一次传一个uid，不然对前端是个挑战
 		adminr.POST("/interviewer/add", admin.AddInterviewers)
 
 		adminr.POST("/settime", admin.SetTime)
