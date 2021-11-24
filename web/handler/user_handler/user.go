@@ -119,7 +119,6 @@ func Register(regInfo *forms.UserRegisterInfo) error {
 		OrganizationID: regInfo.OrganizationID,
 		DepartmentID:   regInfo.DepartmentID,
 	}
-
 	// 保存数据库
 	// 判断简历是否存在
 	var count int64
@@ -132,12 +131,11 @@ func Register(regInfo *forms.UserRegisterInfo) error {
 		return errInfo.ErrInvalidParam
 	}
 
+	// 不可重复报名某一组织
 	mutex := global.Rs.NewMutex(fmt.Sprintf("reg_%d", reg.UID))
-	err := mutex.Lock()
-	if err != nil {
+	if err := mutex.Lock(); err != nil {
 		return err
 	}
-	// 不可重复报名某一组织
 	if db.Model(models.UserRegister{}).Where("uid=? and organization_id=?", regInfo.UID, regInfo.OrganizationID).Count(&count); count != 0 {
 		return errInfo.ErrReRegister
 	}

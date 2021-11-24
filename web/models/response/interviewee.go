@@ -16,3 +16,9 @@ type IntervieweeRsp struct {
 	SecondStatus   int8   `json:"second_status"`
 	FinalStatus    int8   `json:"final_status"`
 }
+
+type FMInfo struct {
+	Female int64 `json:"female"`
+	Male   int64 `json:"male"`
+	Sum    int64 `json:"sum"`
+}

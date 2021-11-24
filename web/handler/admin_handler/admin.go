@@ -137,17 +137,15 @@ func GetInterviewee(uid string, depid int, orgid int) (*models.UserInfo, error) 
 	return userInfo, nil
 }
 
-func GetAllInterviewees(orgid, depid int) ([]response.IntervieweeRsp, error) {
+func GetAllInterviewees(depid, orgid int) ([]response.IntervieweeRsp, error) {
 	db := global.DB
 
 	var interviewees []response.IntervieweeRsp
 	// 从 user_info 和 user_register 两张表里查数据
-	result := db.Table("user_register as ur").Joins("inner join user_info as ui on ur.uid = ui.uid").Where("ur.organization_id = ? and ur.department_id = ?", orgid, depid).Scan(&interviewees)
+	sqlRaw := "SELECT * FROM user_register as ur inner join user_info as ui on ur.uid = ui.uid where ur.organization_id = ? and ur.department_id = ?"
+	result := db.Raw(sqlRaw, orgid, depid).Scan(&interviewees)
 
 	// 没有已报名的用户
-	if result.RowsAffected == 0 {
-		return nil, sql.ErrNoRows
-	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -165,33 +163,19 @@ func SetTime(did int, t *forms.Time) error {
 	return res.Error
 }
 
-func GetUserInfo(depid int, orgid int) (sum int64, males int64, females int64, err error) {
+func GetUserInfo(depid int, orgid int) (rsp *response.FMInfo, err error) {
 	db := global.DB
 	var users []*models.UserRegister
+	rsp = &response.FMInfo{}
 	// 本部门的报名人数,并保存uid
-	result := db.Model(&models.UserRegister{}).Select("uid").Where("organization_id = ? and department_id = ?", orgid, depid).Find(&users).Count(&sum)
+	result := db.Model(&models.UserRegister{}).Select("uid").Where("organization_id = ? and department_id = ?", orgid, depid).Find(&users).Count(&rsp.Sum)
 	if result.Error != nil {
-		return 0, 0, 0, result.Error
-	}
-	if result.RowsAffected == 0 {
-		return 0, 0, 0, sql.ErrNoRows
+		return rsp, result.Error
 	}
 
-	var flag int64
 	// 报名人数中的男生数
-	for _, user := range users {
-		// 如果是男生，flag 变1
-		flag = 0
-		result := db.Model(&models.UserInfo{}).Where("uid = ? and sex = ?", user.UID, 1).Count(&flag)
-		if flag == 1 {
-			males++
-		}
-		if result.Error != nil {
-			return 0, 0, 0, result.Error
-		}
-	}
-	// 报名人数中的女生数
-	females = sum - males
-
-	return sum, males, females, nil
+	sqlRaw := "SELECT COUNT(sex) FROM user_info as ui inner join user_register as ur on ur.uid = ui.uid where ur.organization_id = ? and ur.department_id = ? and ui.sex=1"
+	db.Raw(sqlRaw, orgid, depid).Scan(&rsp.Male)
+	rsp.Female = rsp.Sum - rsp.Male
+	return rsp, nil
 }

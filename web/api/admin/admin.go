@@ -217,10 +217,6 @@ func GetAllInterviewees(c *gin.Context) {
 
 	interviewees, err := admin_handler.GetAllInterviewees(depid, orgid)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			api.FailWithErr(c, api.CodeInvalidParam, "该部门还没有已报名的用户")
-			return
-		}
 		zap.S().Error("admin_handler.GetAllInterviewees()", zap.Error(err))
 		api.Fail(c, api.CodeSystemBusy)
 		return
@@ -256,8 +252,9 @@ func GetInterviewee(c *gin.Context) {
 			api.FailWithErr(c, api.CodeInvalidParam, "用户表中无此用户")
 			return
 		}
+		zap.S().Error("admin.GetInterviewee", err)
 		api.Fail(c, api.CodeSystemBusy)
-
+		return
 	}
 
 	api.Success(c, userInfo)
@@ -291,7 +288,7 @@ func GetUserInfo(c *gin.Context) {
 	// 获取depid 和 orgid
 	depid := claimInfo.DepartmentID
 	orgid := claimInfo.OrganizationID
-	sum, males, females, err := admin_handler.GetUserInfo(depid, orgid)
+	rsp, err := admin_handler.GetUserInfo(depid, orgid)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			api.FailWithErr(c, api.CodeUserNotExist, "本部门暂无人报名")
@@ -301,11 +298,7 @@ func GetUserInfo(c *gin.Context) {
 		return
 	}
 
-	api.Success(c, gin.H{
-		"sum":     sum,
-		"males":   males,
-		"females": females,
-	})
+	api.Success(c, rsp)
 }
 
 // DeleteInterviewers 删除面试官
