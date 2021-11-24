@@ -18,6 +18,7 @@ const (
 	CodeHasNotPower
 	CodeUserNotExist
 	CodeBadRequest
+	CodeConcurrent
 )
 
 var codeMsg = map[CodeType]string{
@@ -28,6 +29,7 @@ var codeMsg = map[CodeType]string{
 	CodeHasNotPower:      "没有权限",
 	CodeUserNotExist:     "用户不存在",
 	CodeBadRequest:       "错误请求",
+	CodeConcurrent:       "请勿重复点击",
 }
 
 func (c CodeType) Msg() string {

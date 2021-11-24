@@ -3,11 +3,14 @@ package admin_handler
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/go-sql-driver/mysql"
+	"time"
 	"uapply_go/web/forms"
 	"uapply_go/web/global"
 	"uapply_go/web/global/errInfo"
 	"uapply_go/web/models"
+	jwt2 "uapply_go/web/models/jwt"
 	"uapply_go/web/models/response"
 )
 
@@ -178,4 +181,39 @@ func GetUserInfo(depid int, orgid int) (rsp *response.FMInfo, err error) {
 	db.Raw(sqlRaw, orgid, depid).Scan(&rsp.Male)
 	rsp.Female = rsp.Sum - rsp.Male
 	return rsp, nil
+}
+
+func AddInterviewers(id *jwt2.Claims, uid *forms.Interviewer) error {
+	db := global.DB
+	// 判断此子是否为该部门的
+	rdb := global.Rdb
+	key := fmt.Sprintf("inter_%d", uid.UID)
+	redisRes := rdb.SetNX(context.Background(), key, 1, time.Second*2)
+	if redisRes.Val() == false {
+		return errInfo.ErrConcurrent
+	}
+
+	res := db.Model(models.StaffInfo{}).Where(&models.StaffInfo{DepartmentID: int32(id.DepartmentID), OrganizationID: int32(id.OrganizationID), UID: int32(uid.UID)}).
+		Update("role", 1)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return errInfo.ErrInvalidParam
+	}
+	// 将 user_wx_info 的role设置为1
+	res = db.Model(&models.UserWxInfo{}).Where(`uid=?`, uid.UID).Update("role", 1)
+	if res.Error != nil {
+		return res.Error
+	}
+	// 添加到interviewers
+	res = db.Create(&models.Interviewers{
+		UID:            int32(uid.UID),
+		OrganizationID: id.OrganizationID,
+		DepartmentID:   id.DepartmentID,
+	})
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
 }

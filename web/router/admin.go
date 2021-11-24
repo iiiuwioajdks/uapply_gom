@@ -36,6 +36,7 @@ func InitAdminRouter(router *gin.RouterGroup) {
 		adminr.GET("/getuser/reviewed/:num", admin.Getinterviewed) // 部门获取第n轮已面试成员
 		adminr.GET("/getuser/enroll", admin.GetUserEnroll)         // 部门获取自己的通过部员
 		adminr.GET("/getuser/info", admin.GetUserInfo)             // 获取本部门男女人数，报名人数信息
+		adminr.GET("/getinters", admin.GetInterviewers)
 
 		adminr.DELETE("/interviewer/del", admin.DeleteInterviewers) // 删除面试官
 	}
