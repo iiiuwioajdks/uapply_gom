@@ -21,7 +21,7 @@ func InitAdminRouter(router *gin.RouterGroup) {
 		adminr.POST("/interviewer/add", admin.AddInterviewers)
 
 		adminr.POST("/settime", admin.SetTime)
-		adminr.POST("/interview/sms/:num")              // 发送第n轮面试短信
+		adminr.POST("/interview/sms", admin.SMS)        // 发送第n轮面试短信
 		adminr.POST("/interview/email/:num")            // 发送第n轮面试邮件
 		adminr.POST("/interview/pass/:num", admin.Pass) // 通过第n轮面试
 		adminr.POST("/interview/out/", admin.Out)       // 在第n轮面试时直接淘汰，进行数据库删除

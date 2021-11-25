@@ -22,3 +22,8 @@ type FMInfo struct {
 	Male   int64 `json:"male"`
 	Sum    int64 `json:"sum"`
 }
+
+type PhoneInfo struct {
+	UID   []int    `json:"uid"`
+	Phone []string `json:"phone"`
+}

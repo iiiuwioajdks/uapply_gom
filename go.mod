@@ -16,6 +16,8 @@ require (
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.9.0
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.299
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.299
 	go.uber.org/zap v1.19.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gorm.io/driver/mysql v1.1.2

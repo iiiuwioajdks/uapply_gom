@@ -3,8 +3,10 @@ package admin_handler
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
+	"go.uber.org/zap"
 	"time"
 	"uapply_go/web/forms"
 	"uapply_go/web/global"
@@ -12,6 +14,11 @@ import (
 	"uapply_go/web/models"
 	jwt2 "uapply_go/web/models/jwt"
 	"uapply_go/web/models/response"
+
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
+	sms "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111" // 引入sms
 )
 
 func Login(ctx context.Context, loginInfo *forms.Login) (*models.Department, error) {
@@ -218,6 +225,28 @@ func AddInterviewers(id *jwt2.Claims, uid *forms.Interviewer) error {
 	return nil
 }
 
+func GetPhones(depid int, orgid int, uids *forms.MultiUIDForm) (*response.PhoneInfo, error) {
+	db := global.DB
+	// 剔除非法的uid
+	var phoneInfo response.PhoneInfo
+	var ids []int
+	var phones []string
+	sqlRaw := "select uid from user_register where uid in (?) and organization_id = ? and department_id = ?"
+	if res := db.Raw(sqlRaw, uids.UID, orgid, depid).Find(&ids); res.Error != nil {
+		return nil, res.Error
+	}
+	sqlRaw = "select phone from user_info where uid in (?)"
+	if res := db.Raw(sqlRaw, uids.UID).Find(&phones); res.Error != nil {
+		return nil, res.Error
+	}
+	if len(phones) != len(ids) {
+		return nil, errInfo.ErrInvalidParam
+	}
+	phoneInfo.UID = ids
+	phoneInfo.Phone = phones
+	return &phoneInfo, nil
+}
+
 func Out(form *forms.MultiUIDForm, orgid, depid int) error {
 	// 开启事务
 	tx := global.DB.Begin()
@@ -234,5 +263,70 @@ func Out(form *forms.MultiUIDForm, orgid, depid int) error {
 		return result.Error
 	}
 	tx.Commit()
+	return nil
+}
+
+func SendSMS(Type int, pi *response.PhoneInfo) error {
+	credential := common.NewCredential(
+		global.Conf.SMSInfo.SecretId,
+		global.Conf.SMSInfo.SecretKey,
+	)
+	cpf := profile.NewClientProfile()
+
+	cpf.HttpProfile.ReqMethod = "POST"
+
+	cpf.HttpProfile.Endpoint = "sms.tencentcloudapi.com"
+
+	cpf.SignMethod = "HmacSHA1"
+
+	client, _ := sms.NewClient(credential, "ap-guangzhou", cpf)
+
+	request := sms.NewSendSmsRequest()
+
+	/* 短信应用ID: 短信SdkAppId在 [短信控制台] 添加应用后生成的实际SdkAppId，示例如1400006666 */
+	request.SmsSdkAppId = common.StringPtr(global.Conf.SMSInfo.SdkAppId)
+	/* 短信签名内容: 使用 UTF-8 编码，必须填写已审核通过的签名，签名信息可登录 [短信控制台] 查看 */
+	request.SignName = common.StringPtr("xxx")
+	/* 用户的 session 内容: 可以携带用户侧 ID 等上下文信息，server 会原样返回 */
+	//request.SessionContext = common.StringPtr("xxx")
+	/* 模板参数: 若无模板参数，则设置为空*/
+	var model string
+	switch Type {
+	case 1: // 通过第一轮
+		request.TemplateParamSet = common.StringPtrs([]string{""})
+		model = global.Conf.SMSInfo.Model1
+	case 2: // 通过第二轮
+		request.TemplateParamSet = common.StringPtrs([]string{""})
+		model = global.Conf.SMSInfo.Model2
+	case 3: // 录取
+		request.TemplateParamSet = common.StringPtrs([]string{""})
+		model = global.Conf.SMSInfo.Model3
+	case 4: // 淘汰
+		request.TemplateParamSet = common.StringPtrs([]string{""})
+		model = global.Conf.SMSInfo.Model4
+	default:
+		return errInfo.ErrInvalidParam
+	}
+	/* 模板 ID: 必须填写已审核通过的模板 ID。模板ID可登录 [短信控制台] 查看 */
+	request.TemplateId = common.StringPtr(model)
+	/* 下发手机号码，采用 E.164 标准，+[国家或地区码][手机号]
+	 * 示例如：+8613711112222， 其中前面有一个+号 ，86为国家码，13711112222为手机号，最多不要超过200个手机号*/
+	for i := 0; i < len(pi.Phone); i++ {
+		pi.Phone[i] = "+86" + pi.Phone[i]
+	}
+	request.PhoneNumberSet = common.StringPtrs(pi.Phone)
+
+	// 通过client对象调用想要访问的接口，需要传入请求对象
+	response, err := client.SendSms(request)
+	// 处理异常
+	if _, ok := err.(*errors.TencentCloudSDKError); ok {
+		fmt.Printf("An API error has returned: %s", err)
+		return err
+	}
+	if err != nil {
+		return err
+	}
+	b, _ := json.Marshal(response.Response)
+	zap.S().Info(b)
 	return nil
 }

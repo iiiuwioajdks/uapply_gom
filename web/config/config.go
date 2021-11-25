@@ -8,6 +8,7 @@ type ServerConf struct {
 	JwtInfo     JwtConf     `json:"jwt" mapstructure:"jwt"`
 	WXInfo      WxConf      `json:"wx_info" mapstructure:"wx"`
 	InterWxInfo InterWxConf `mapstructure:"interWx"`
+	SMSInfo     SMSConf     `json:"sms" mapstructure:"sms"`
 }
 
 type JwtConf struct {
@@ -46,4 +47,15 @@ type WxConf struct {
 type InterWxConf struct {
 	Appid  string `mapstructure:"appID"`
 	Secret string `mapstructure:"secret"`
+}
+
+type SMSConf struct {
+	SecretId  string `json:"secretId"`
+	SecretKey string `json:"secretKey"`
+	SdkAppId  string `json:"sdkAppId"`
+	Sign      string `json:"sign"`
+	Model1    string `json:"model1"`
+	Model2    string `json:"model2"`
+	Model3    string `json:"model3"`
+	Model4    string `json:"model4"`
 }

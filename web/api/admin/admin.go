@@ -389,3 +389,51 @@ func SetTime(c *gin.Context) {
 func GetInterviewers(c *gin.Context) {
 
 }
+
+func SMS(c *gin.Context) {
+	var sms forms.MultiUIDForm
+	if err := c.ShouldBindJSON(&sms); err != nil {
+		api.HandleValidatorError(c, err)
+		return
+	}
+	ok, depid, orgid := GetID(c)
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	phoneInfo, err := admin_handler.GetPhones(depid, orgid, &sms)
+	if err != nil {
+		if errors.Is(err, errInfo.ErrInvalidParam) {
+			api.FailWithErr(c, api.CodeInvalidParam, "有用户没有对应的手机号或者有用户不为你部门的成员，请检查选中人员，若多次出现请联系相关人员")
+			return
+		}
+		zap.S().Error("api.admin.SMS.Func(GetPhones):", err)
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	// 根据手机号码和uid发送短信和面试密钥
+	err = admin_handler.SendSMS(sms.Type, phoneInfo)
+	if err != nil {
+		if errors.Is(err, errInfo.ErrInvalidParam) {
+			api.Fail(c, api.CodeInvalidParam)
+			return
+		}
+		zap.S().Error("api.admin.SMS.Func(SendSMS):", err)
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, phoneInfo)
+}
+
+func GetID(c *gin.Context) (bool, int, int) {
+	// 获取claims
+	claim, ok := c.Get("claim")
+	if !ok {
+		return false, 0, 0
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	// 获取depid 和 orgid
+	depid := claimInfo.DepartmentID
+	orgid := claimInfo.OrganizationID
+	return true, depid, orgid
+}

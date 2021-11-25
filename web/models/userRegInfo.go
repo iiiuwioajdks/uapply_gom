@@ -10,13 +10,13 @@ const (
 type UserInfo struct {
 	UID     int32  `json:"uid" gorm:"primaryKey"`
 	Name    string `json:"name"` // 姓名
-	StuNum  string `json:"stu_num" gorm:"index"`
-	Address string `json:"address"` // 楼号
-	Major   string `json:"major"`   // 专业
-	Phone   string `json:"phone"`   // 手机
-	Email   string `json:"email"`   // 邮箱
-	Sex     int8   `json:"sex"`     // 性别， 1为男，2为女
-	Intro   string `json:"intro"`   // 简介
+	StuNum  string `json:"stu_num" gorm:"index;type:varchar(20)"`
+	Address string `json:"address" gorm:"type:varchar(60)"` // 楼号
+	Major   string `json:"major" gorm:"type:varchar(20)"`   // 专业
+	Phone   string `json:"phone" gorm:"type:varchar(20)"`   // 手机
+	Email   string `json:"email" gorm:"type:varchar(40)"`   // 邮箱
+	Sex     int8   `json:"sex"`                             // 性别， 1为男，2为女
+	Intro   string `json:"intro"`                           // 简介
 }
 
 type UserRegister struct {
@@ -30,8 +30,8 @@ type UserRegister struct {
 }
 
 type UserEnroll struct {
-	UID            int32 `json:"uid"`
-	UserName       string
-	DepartmentID   int `gorm:"index"`
-	OrganizationID int `gorm:"index"`
+	UID            int32  `json:"uid"`
+	UserName       string `gorm:"type:varchar(30)"`
+	DepartmentID   int    `gorm:"index"`
+	OrganizationID int    `gorm:"index"`
 }
