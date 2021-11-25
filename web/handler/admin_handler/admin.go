@@ -217,3 +217,22 @@ func AddInterviewers(id *jwt2.Claims, uid *forms.Interviewer) error {
 	}
 	return nil
 }
+
+func Out(form *forms.MultiUIDForm, orgid, depid int) error {
+	// 开启事务
+	tx := global.DB.Begin()
+	result := tx.Table("user_register").Where("organization_id = ? and department_id = ? and uid in ?", orgid, depid, form.UID).Delete(&models.UserRegister{})
+	// RowsAffected 和 uid 切片长度不一致说明有部分 uid 不正确
+	if result.RowsAffected != int64(len(form.UID)) {
+		// 回滚
+		tx.Rollback()
+		return errInfo.ErrInvalidUIDS
+	}
+	if result.Error != nil {
+		// 回滚
+		tx.Rollback()
+		return result.Error
+	}
+	tx.Commit()
+	return nil
+}
