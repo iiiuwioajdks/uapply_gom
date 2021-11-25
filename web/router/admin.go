@@ -24,8 +24,8 @@ func InitAdminRouter(router *gin.RouterGroup) {
 		adminr.POST("/interview/sms", admin.SMS)        // 发送第n轮面试短信
 		adminr.POST("/interview/email/:num")            // 发送第n轮面试邮件
 		adminr.POST("/interview/pass/:num", admin.Pass) // 通过第n轮面试
-		adminr.POST("/interview/out/", admin.Out)       // 在第n轮面试时直接淘汰，进行数据库删除
-		adminr.POST("/interview/enroll/", admin.Enroll) // 在第n轮面试时加入暂录取名单，加入部员名单
+		adminr.POST("/interview/out", admin.Out)        // 在第n轮面试时直接淘汰，进行数据库删除
+		adminr.POST("/interview/enroll", admin.Enroll)  // 在第n轮面试时加入暂录取名单，加入部员名单
 
 		adminr.PATCH("/udpdep", admin.Update) // 根据部门id更新部门信息
 

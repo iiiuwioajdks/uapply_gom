@@ -22,7 +22,7 @@ type UIDForm struct {
 // MultiUIDForm 像AddInterviewers，Pass，Out， Enroll，DeleteInterviewers 都需要 uid 数组
 type MultiUIDForm struct {
 	UID  []int `json:"uids" binding:"required"`
-	Type int   `json:"type" binding:"required"` // 1表示第一轮，2表示第二轮，3表示录取，4表示淘汰
+	Type int   `json:"type"` // 1表示第一轮，2表示第二轮，3表示录取，4表示淘汰
 }
 
 type Time struct {

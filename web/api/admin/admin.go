@@ -239,12 +239,8 @@ func Out(c *gin.Context) {
 
 	err := admin_handler.Out(&uidsForm, orgid, depid)
 	if err != nil {
-		if errors.Is(err, errInfo.ErrInvalidUIDS) {
-			api.FailWithErr(c, api.CodeInvalidParam, err.Error())
-			return
-		}
 		zap.S().Error("admin_handler.Out()", zap.Error(err))
-		api.Fail(c, api.CodeSystemBusy)
+		api.FailWithErr(c, api.CodeSystemBusy, "部分请求失败，请刷新重试")
 		return
 	}
 	api.Success(c, "淘汰用户成功")
