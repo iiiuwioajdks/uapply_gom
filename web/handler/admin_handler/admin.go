@@ -199,29 +199,33 @@ func AddInterviewers(id *jwt2.Claims, uid *forms.Interviewer) error {
 	if redisRes.Val() == false {
 		return errInfo.ErrConcurrent
 	}
-
-	res := db.Model(models.StaffInfo{}).Where(&models.StaffInfo{DepartmentID: int32(id.DepartmentID), OrganizationID: int32(id.OrganizationID), UID: int32(uid.UID)}).
+	tx := db.Begin()
+	res := tx.Model(models.StaffInfo{}).Where(&models.StaffInfo{DepartmentID: int32(id.DepartmentID), OrganizationID: int32(id.OrganizationID), UID: int32(uid.UID)}).
 		Update("role", 1)
 	if res.Error != nil {
+		tx.Rollback()
 		return res.Error
 	}
 	if res.RowsAffected == 0 {
 		return errInfo.ErrInvalidParam
 	}
 	// 将 user_wx_info 的role设置为1
-	res = db.Model(&models.UserWxInfo{}).Where(`uid=?`, uid.UID).Update("role", 1)
+	res = tx.Model(&models.UserWxInfo{}).Where(`uid=?`, uid.UID).Update("role", 1)
 	if res.Error != nil {
+		tx.Rollback()
 		return res.Error
 	}
 	// 添加到interviewers
-	res = db.Create(&models.Interviewers{
+	res = tx.Create(&models.Interviewers{
 		UID:            int32(uid.UID),
 		OrganizationID: id.OrganizationID,
 		DepartmentID:   id.DepartmentID,
 	})
 	if res.Error != nil {
+		tx.Rollback()
 		return res.Error
 	}
+	tx.Commit()
 	return nil
 }
 
