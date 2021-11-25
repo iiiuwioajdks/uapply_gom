@@ -185,7 +185,31 @@ func AddExtraEnroll(c *gin.Context) {
 
 // AddInterviewers 通过uid增加面试官，首先他应该是存在且部员
 func AddInterviewers(c *gin.Context) {
-
+	var uid forms.Interviewer
+	if err := c.ShouldBindJSON(&uid); err != nil {
+		api.HandleValidatorError(c, err)
+		return
+	}
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	err := admin_handler.AddInterviewers(claimInfo, &uid)
+	if err != nil {
+		if errors.Is(err, errInfo.ErrInvalidParam) {
+			api.FailWithErr(c, api.CodeInvalidParam, "此人不存在你的部门或已经是你部门的面试官")
+			return
+		}
+		if errors.Is(err, errInfo.ErrConcurrent) {
+			api.Fail(c, api.CodeConcurrent)
+			return
+		}
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, "添加成功")
 }
 
 // Pass 通过某一轮面试
@@ -360,4 +384,8 @@ func SetTime(c *gin.Context) {
 		return
 	}
 	api.Success(c, nil)
+}
+
+func GetInterviewers(c *gin.Context) {
+
 }

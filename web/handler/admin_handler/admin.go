@@ -3,11 +3,14 @@ package admin_handler
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/go-sql-driver/mysql"
+	"time"
 	"uapply_go/web/forms"
 	"uapply_go/web/global"
 	"uapply_go/web/global/errInfo"
 	"uapply_go/web/models"
+	jwt2 "uapply_go/web/models/jwt"
 	"uapply_go/web/models/response"
 )
 
@@ -180,22 +183,37 @@ func GetUserInfo(depid int, orgid int) (rsp *response.FMInfo, err error) {
 	return rsp, nil
 }
 
-func Out(form *forms.MultiUIDForm, orgid, depid int) error {
-	// 开启事务
-	tx := global.DB.Begin()
-	result := tx.Table("user_register").Where("organization_id = ? and department_id = ? and uid in ?", orgid, depid, form.UID).Delete(&models.UserRegister{})
-	// 一旦有错误的 uid RowsAffected 就会和 uid 切片的长度不一致
-	if result.RowsAffected != int64(len(form.UID)) {
-		// 回滚
-		tx.Rollback()
-		return errInfo.ErrInvalidUIDS
+func AddInterviewers(id *jwt2.Claims, uid *forms.Interviewer) error {
+	db := global.DB
+	// 判断此子是否为该部门的
+	rdb := global.Rdb
+	key := fmt.Sprintf("inter_%d", uid.UID)
+	redisRes := rdb.SetNX(context.Background(), key, 1, time.Second*2)
+	if redisRes.Val() == false {
+		return errInfo.ErrConcurrent
 	}
-	if result.Error != nil {
-		// 回滚
-		tx.Rollback()
-		return result.Error
+
+	res := db.Model(models.StaffInfo{}).Where(&models.StaffInfo{DepartmentID: int32(id.DepartmentID), OrganizationID: int32(id.OrganizationID), UID: int32(uid.UID)}).
+		Update("role", 1)
+	if res.Error != nil {
+		return res.Error
 	}
-	// 提交事务
-	tx.Commit()
+	if res.RowsAffected == 0 {
+		return errInfo.ErrInvalidParam
+	}
+	// 将 user_wx_info 的role设置为1
+	res = db.Model(&models.UserWxInfo{}).Where(`uid=?`, uid.UID).Update("role", 1)
+	if res.Error != nil {
+		return res.Error
+	}
+	// 添加到interviewers
+	res = db.Create(&models.Interviewers{
+		UID:            int32(uid.UID),
+		OrganizationID: id.OrganizationID,
+		DepartmentID:   id.DepartmentID,
+	})
+	if res.Error != nil {
+		return res.Error
+	}
 	return nil
 }
