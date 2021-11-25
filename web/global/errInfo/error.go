@@ -13,4 +13,5 @@ var (
 	ErrUserMatch      = errors.New("用户报名组织或部门和面试不匹配")
 	ErrCNotReg        = errors.New("该时间段无法报名该部门")
 	ErrSystem         = errors.New("系统繁忙")
+	ErrInvalidUIDS    = errors.New("存在不正确的UID")
 )

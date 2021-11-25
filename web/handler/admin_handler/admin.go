@@ -179,3 +179,23 @@ func GetUserInfo(depid int, orgid int) (rsp *response.FMInfo, err error) {
 	rsp.Female = rsp.Sum - rsp.Male
 	return rsp, nil
 }
+
+func Out(form *forms.MultiUIDForm, orgid, depid int) error {
+	// 开启事务
+	tx := global.DB.Begin()
+	result := tx.Table("user_register").Where("organization_id = ? and department_id = ? and uid in ?", orgid, depid, form.UID).Delete(&models.UserRegister{})
+	// 一旦有错误的 uid RowsAffected 就会和 uid 切片的长度不一致
+	if result.RowsAffected != int64(len(form.UID)) {
+		// 回滚
+		tx.Rollback()
+		return errInfo.ErrInvalidUIDS
+	}
+	if result.Error != nil {
+		// 回滚
+		tx.Rollback()
+		return result.Error
+	}
+	// 提交事务
+	tx.Commit()
+	return nil
+}

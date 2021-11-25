@@ -195,7 +195,35 @@ func Pass(c *gin.Context) {
 
 // Out 在某一轮面试被淘汰
 func Out(c *gin.Context) {
+	var uidsForm forms.MultiUIDForm
+	// uid 数组为必填项
+	if err := c.ShouldBindJSON(&uidsForm); err != nil {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
 
+	// 获取 claim
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	// 获取 orgid 和 depid
+	orgid := claimInfo.OrganizationID
+	depid := claimInfo.DepartmentID
+
+	err := admin_handler.Out(&uidsForm, orgid, depid)
+	if err != nil {
+		if errors.Is(err, errInfo.ErrInvalidUIDS) {
+			api.FailWithErr(c, api.CodeBadRequest, err.Error())
+			return
+		}
+		zap.S().Error("admin_handler.Out()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, "淘汰用户成功")
 }
 
 // Enroll 在某一轮面试被录取
