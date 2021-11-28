@@ -13,6 +13,7 @@ import (
 	"uapply_go/web/handler/admin_handler"
 	"uapply_go/web/middleware"
 	jwt2 "uapply_go/web/models/jwt"
+	"uapply_go/web/models/response"
 )
 
 // Create 管理员（部门）的创建
@@ -214,7 +215,39 @@ func AddInterviewers(c *gin.Context) {
 
 // Pass 通过某一轮面试
 func Pass(c *gin.Context) {
+	var uidsForm forms.MultiUIDForm
+	num, ok := c.Params.Get("num")
+	if !ok {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+	err := c.ShouldBindJSON(&uidsForm)
+	if err != nil {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
 
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	//获取 depid orgid
+	depid := claimInfo.DepartmentID
+	orgid := claimInfo.OrganizationID
+	err = admin_handler.Pass(num, orgid, depid, uidsForm)
+	if err != nil {
+		if errors.Is(err, errInfo.ErrInvalidParam) {
+			api.Fail(c, api.CodeInvalidParam)
+			return
+		}
+		zap.S().Error("admin_handler.Pass()", zap.Error(err))
+		api.FailWithErr(c, api.CodeSystemBusy, err.Error())
+		return
+	}
+
+	api.Success(c, "通过面试"+num)
 }
 
 // Out 在某一轮面试被淘汰
@@ -314,8 +347,46 @@ func GetUninterview(c *gin.Context) {
 
 }
 
-// Getinterviewed 部门获取第n轮已面试成员
-func Getinterviewed(c *gin.Context) {
+// GetInterviewed 部门获取第n轮已面试成员
+func GetInterviewed(c *gin.Context) {
+	num, ok := c.Params.Get("num")
+	if !ok {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	//获取 depid orgid
+	depid := claimInfo.DepartmentID
+	orgid := claimInfo.OrganizationID
+
+	// handler
+	interviewers, err := admin_handler.GetInterviewed(num, orgid, depid)
+	if err != nil {
+		if errors.Is(err, errInfo.ErrInvalidParam) {
+			api.Fail(c, api.CodeInvalidParam)
+			return
+		}
+		zap.S().Error("admin_handler.GetInterviewed()", zap.Error(err))
+		api.FailWithErr(c, api.CodeSystemBusy, err.Error())
+		return
+	}
+
+	var resp []*response.Interviewed
+
+	for _, item := range interviewers {
+		resp = append(resp, &response.Interviewed{
+			UID:  item.UID,
+			Name: item.Name,
+		})
+	}
+
+	api.Success(c, resp)
 
 }
 

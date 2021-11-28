@@ -192,8 +192,8 @@ func GetUserInfo(depid int, orgid int) (rsp *response.FMInfo, err error) {
 
 func AddInterviewers(id *jwt2.Claims, uid *forms.Interviewer) error {
 	db := global.DB
-	// 判断此子是否为该部门的
 	rdb := global.Rdb
+	// 判断此子是否为该部门的
 	key := fmt.Sprintf("inter_%d", uid.UID)
 	redisRes := rdb.SetNX(context.Background(), key, 1, time.Second*2)
 	if redisRes.Val() == false {
@@ -325,5 +325,56 @@ func SendSMS(Type int, pi *response.PhoneInfo) error {
 	}
 	b, _ := json.Marshal(response.Response)
 	zap.S().Info(b)
+	return nil
+}
+
+func GetInterviewed(num string, orgid int, depid int) ([]*models.UserInfo, error) {
+	db := global.DB
+
+	var intervieweds []*models.UserInfo
+	if num == "1" {
+		sqlRaw := "SELECT ui.`uid`, name FROM user_register ur JOIN user_info ui ON ui.`uid` = ur.`uid` WHERE organization_id = ? AND department_id = ? AND (first_status = 2 OR first_status = 3)"
+		result := db.Raw(sqlRaw, orgid, depid).Find(&intervieweds)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+	} else if num == "2" {
+		sqlRaw := "SELECT ui.`uid`, name FROM user_register ur JOIN user_info ui ON ui.`uid` = ur.`uid` WHERE organization_id = ? AND department_id = ? AND first_status = 3 AND (second_status = 2 OR second_status = 3)"
+		result := db.Raw(sqlRaw, orgid, depid).Find(&intervieweds)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+
+	} else {
+		return nil, errInfo.ErrInvalidParam
+	}
+
+	return intervieweds, nil
+}
+
+func Pass(num string, orgid int, depid int, uids forms.MultiUIDForm) error {
+	db := global.DB
+
+	if num == "1" {
+		for _, uid := range uids.UID {
+			sqlRaw := "update user_register set first_status = 3 where deleted_at IS NULL and department_id = ? and organization_id = ? and uid = ?"
+			result := db.Exec(sqlRaw, depid, orgid, uid)
+			if result.Error != nil {
+				return result.Error
+			}
+		}
+
+	} else if num == "2" {
+		for _, uid := range uids.UID {
+			sqlRaw := "update user_register set second_status = 3 where deleted_at IS NULL and department_id = ? and organization_id = ? and uid = ? and first_status = 3"
+			result := db.Exec(sqlRaw, depid, orgid, uid)
+			if result.Error != nil {
+				return result.Error
+			}
+		}
+	} else {
+		return errInfo.ErrInvalidParam
+	}
+
 	return nil
 }
