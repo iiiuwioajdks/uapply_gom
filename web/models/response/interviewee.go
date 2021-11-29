@@ -27,3 +27,8 @@ type PhoneInfo struct {
 	UID   []int    `json:"uid"`
 	Phone []string `json:"phone"`
 }
+
+type Interviewed struct {
+	UID  int32  `json:"uid"`
+	Name string `json:"name"`
+}
