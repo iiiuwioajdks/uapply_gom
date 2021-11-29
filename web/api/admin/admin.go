@@ -248,7 +248,28 @@ func Out(c *gin.Context) {
 
 // Enroll 在某一轮面试被录取
 func Enroll(c *gin.Context) {
+	var uidForm forms.MultiUIDForm
+	// uid 必填
+	if err := c.ShouldBindJSON(&uidForm); err != nil {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	orgid := claimInfo.OrganizationID
+	depid := claimInfo.DepartmentID
 
+	err := admin_handler.Enroll(&uidForm, orgid, depid)
+	if err != nil {
+		zap.S().Error("admin_handler.Enroll()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, "录取用户成功")
 }
 
 // GetAllInterviewees 部门获取报名自己部门的所有用户

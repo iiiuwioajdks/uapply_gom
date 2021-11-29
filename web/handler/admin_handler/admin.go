@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
+	"sync"
 	"time"
 	"uapply_go/web/forms"
 	"uapply_go/web/global"
@@ -248,14 +249,64 @@ func GetPhones(depid int, orgid int, uids *forms.MultiUIDForm) (*response.PhoneI
 }
 
 func Out(form *forms.MultiUIDForm, orgid, depid int) error {
-	// 开启事务
 	db := global.DB
 	result := db.Model(&models.UserRegister{}).Where("organization_id = ? and department_id = ? and uid in ?", orgid, depid, form.UID).Delete(&models.UserRegister{})
-	// RowsAffected 和 uid 切片长度不一致说明有部分 uid 不正确
 	if result.Error != nil {
-		// 回滚
 		return result.Error
 	}
+	return nil
+}
+
+var enrollLock sync.Mutex
+
+func Enroll(form *forms.MultiUIDForm, orgid, depid int) error {
+	db := global.DB
+	// 可能会有部分 uid 已经存在在 user_enroll 表中了，需要在后面添加数据的时候将这些排除在外，防止重复添加
+	var uidExists []int
+	// 去重后的 uid 切片声明
+	var uidDistinct []int
+	enrollLock.Lock()
+	defer enrollLock.Unlock()
+	// 查找存在的 uid
+	result := db.Table("user_enroll").Select("uid").Where("organization_id = ? and department_id = ? and uid in ?", orgid, depid, form.UID).Find(&uidExists)
+	// 当查到数据时，进行去重
+	if result.RowsAffected != 0 {
+		uidDistinct = make([]int, 0, len(form.UID))
+		tmap := make(map[int]bool)
+		for _, uid := range uidExists {
+			tmap[uid] = true
+		}
+		for _, uid := range form.UID {
+			// map 里没有对应的 key 说明没有重复
+			if _, ok := tmap[uid]; !ok {
+				uidDistinct = append(uidDistinct, uid)
+			}
+		}
+	} else {
+		// 没查到就不用去重
+		uidDistinct = form.UID
+	}
+
+	// 查找经过去重后的用户信息
+	var userEnroll []models.UserEnroll
+	sqlRawSelect := "select ur.uid,ui.name as user_name,organization_id,department_id from user_register as ur inner join user_info ui on ur.uid = ui.uid where organization_id = ? and department_id = ? and ur.uid in ?"
+	db.Raw(sqlRawSelect, orgid, depid, uidDistinct).Scan(&userEnroll)
+	// 先更新 user_register 里用户的状态，然后再将对应用户信息添加到 user_enroll 表中
+	sqlRawUpdate := "update user_register set first_status=3,second_status=3,final_status=1 where organization_id = ? and department_id = ? and uid in ?"
+	tx := db.Begin()
+	result = tx.Exec(sqlRawUpdate, orgid, depid, uidDistinct)
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+	if len(userEnroll) > 0 {
+		result = tx.Table("user_enroll").Save(&userEnroll)
+		if result.Error != nil {
+			tx.Rollback()
+			return result.Error
+		}
+	}
+	tx.Commit()
 	return nil
 }
 
