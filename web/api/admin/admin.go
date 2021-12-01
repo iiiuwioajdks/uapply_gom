@@ -13,6 +13,7 @@ import (
 	"uapply_go/web/handler/admin_handler"
 	"uapply_go/web/middleware"
 	jwt2 "uapply_go/web/models/jwt"
+	"uapply_go/web/validator"
 )
 
 // Create 管理员（部门）的创建
@@ -23,6 +24,10 @@ func Create(c *gin.Context) {
 
 	// 判断一下参数是否正确
 	if req.DepartmentName == "" || req.Account == "" || req.Password == "" {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+	if ok := validator.VerifyPwd(req.Password, 0); !ok {
 		api.Fail(c, api.CodeInvalidParam)
 		return
 	}
