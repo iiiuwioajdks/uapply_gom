@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
+	"sync"
 	"time"
 	"uapply_go/web/forms"
 	"uapply_go/web/global"
@@ -192,8 +193,8 @@ func GetUserInfo(depid int, orgid int) (rsp *response.FMInfo, err error) {
 
 func AddInterviewers(id *jwt2.Claims, uid *forms.Interviewer) error {
 	db := global.DB
-	// 判断此子是否为该部门的
 	rdb := global.Rdb
+	// 判断此子是否为该部门的
 	key := fmt.Sprintf("inter_%d", uid.UID)
 	redisRes := rdb.SetNX(context.Background(), key, 1, time.Second*2)
 	if redisRes.Val() == false {
@@ -252,14 +253,64 @@ func GetPhones(depid int, orgid int, uids *forms.MultiUIDForm) (*response.PhoneI
 }
 
 func Out(form *forms.MultiUIDForm, orgid, depid int) error {
-	// 开启事务
 	db := global.DB
 	result := db.Model(&models.UserRegister{}).Where("organization_id = ? and department_id = ? and uid in ?", orgid, depid, form.UID).Delete(&models.UserRegister{})
-	// RowsAffected 和 uid 切片长度不一致说明有部分 uid 不正确
 	if result.Error != nil {
-		// 回滚
 		return result.Error
 	}
+	return nil
+}
+
+var enrollLock sync.Mutex
+
+func Enroll(form *forms.MultiUIDForm, orgid, depid int) error {
+	db := global.DB
+	// 可能会有部分 uid 已经存在在 user_enroll 表中了，需要在后面添加数据的时候将这些排除在外，防止重复添加
+	var uidExists []int
+	// 去重后的 uid 切片声明
+	var uidDistinct []int
+	enrollLock.Lock()
+	defer enrollLock.Unlock()
+	// 查找存在的 uid
+	result := db.Table("user_enroll").Select("uid").Where("organization_id = ? and department_id = ? and uid in ?", orgid, depid, form.UID).Find(&uidExists)
+	// 当查到数据时，进行去重
+	if result.RowsAffected != 0 {
+		uidDistinct = make([]int, 0, len(form.UID))
+		tmap := make(map[int]bool)
+		for _, uid := range uidExists {
+			tmap[uid] = true
+		}
+		for _, uid := range form.UID {
+			// map 里没有对应的 key 说明没有重复
+			if _, ok := tmap[uid]; !ok {
+				uidDistinct = append(uidDistinct, uid)
+			}
+		}
+	} else {
+		// 没查到就不用去重
+		uidDistinct = form.UID
+	}
+
+	// 查找经过去重后的用户信息
+	var userEnroll []models.UserEnroll
+	sqlRawSelect := "select ur.uid,ui.name as user_name,organization_id,department_id from user_register as ur inner join user_info ui on ur.uid = ui.uid where organization_id = ? and department_id = ? and ur.uid in ?"
+	db.Raw(sqlRawSelect, orgid, depid, uidDistinct).Scan(&userEnroll)
+	// 先更新 user_register 里用户的状态，然后再将对应用户信息添加到 user_enroll 表中
+	sqlRawUpdate := "update user_register set first_status=3,second_status=3,final_status=1 where organization_id = ? and department_id = ? and uid in ?"
+	tx := db.Begin()
+	result = tx.Exec(sqlRawUpdate, orgid, depid, uidDistinct)
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+	if len(userEnroll) > 0 {
+		result = tx.Table("user_enroll").Save(&userEnroll)
+		if result.Error != nil {
+			tx.Rollback()
+			return result.Error
+		}
+	}
+	tx.Commit()
 	return nil
 }
 
@@ -325,5 +376,56 @@ func SendSMS(Type int, pi *response.PhoneInfo) error {
 	}
 	b, _ := json.Marshal(response.Response)
 	zap.S().Info(b)
+	return nil
+}
+
+func GetInterviewed(num string, orgid int, depid int) ([]*models.UserInfo, error) {
+	db := global.DB
+
+	var intervieweds []*models.UserInfo
+	if num == "1" {
+		sqlRaw := "SELECT ui.`uid`, name FROM user_register ur JOIN user_info ui ON ui.`uid` = ur.`uid` WHERE organization_id = ? AND department_id = ? AND (first_status = 2 OR first_status = 3)"
+		result := db.Raw(sqlRaw, orgid, depid).Find(&intervieweds)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+	} else if num == "2" {
+		sqlRaw := "SELECT ui.`uid`, name FROM user_register ur JOIN user_info ui ON ui.`uid` = ur.`uid` WHERE organization_id = ? AND department_id = ? AND first_status = 3 AND (second_status = 2 OR second_status = 3)"
+		result := db.Raw(sqlRaw, orgid, depid).Find(&intervieweds)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+
+	} else {
+		return nil, errInfo.ErrInvalidParam
+	}
+
+	return intervieweds, nil
+}
+
+func Pass(num string, orgid int, depid int, uids forms.MultiUIDForm) error {
+	db := global.DB
+
+	if num == "1" {
+		for _, uid := range uids.UID {
+			sqlRaw := "update user_register set first_status = 3 where deleted_at IS NULL and department_id = ? and organization_id = ? and uid = ?"
+			result := db.Exec(sqlRaw, depid, orgid, uid)
+			if result.Error != nil {
+				return result.Error
+			}
+		}
+
+	} else if num == "2" {
+		for _, uid := range uids.UID {
+			sqlRaw := "update user_register set second_status = 3 where deleted_at IS NULL and department_id = ? and organization_id = ? and uid = ? and first_status = 3"
+			result := db.Exec(sqlRaw, depid, orgid, uid)
+			if result.Error != nil {
+				return result.Error
+			}
+		}
+	} else {
+		return errInfo.ErrInvalidParam
+	}
+
 	return nil
 }

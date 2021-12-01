@@ -13,7 +13,7 @@ import (
 	"uapply_go/web/handler/admin_handler"
 	"uapply_go/web/middleware"
 	jwt2 "uapply_go/web/models/jwt"
-	"uapply_go/web/validator"
+	"uapply_go/web/models/response"
 )
 
 // Create 管理员（部门）的创建
@@ -24,10 +24,6 @@ func Create(c *gin.Context) {
 
 	// 判断一下参数是否正确
 	if req.DepartmentName == "" || req.Account == "" || req.Password == "" {
-		api.Fail(c, api.CodeInvalidParam)
-		return
-	}
-	if ok := validator.VerifyPwd(req.Password, 0); !ok {
 		api.Fail(c, api.CodeInvalidParam)
 		return
 	}
@@ -219,7 +215,39 @@ func AddInterviewers(c *gin.Context) {
 
 // Pass 通过某一轮面试
 func Pass(c *gin.Context) {
+	var uidsForm forms.MultiUIDForm
+	num, ok := c.Params.Get("num")
+	if !ok {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+	err := c.ShouldBindJSON(&uidsForm)
+	if err != nil {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
 
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	//获取 depid orgid
+	depid := claimInfo.DepartmentID
+	orgid := claimInfo.OrganizationID
+	err = admin_handler.Pass(num, orgid, depid, uidsForm)
+	if err != nil {
+		if errors.Is(err, errInfo.ErrInvalidParam) {
+			api.Fail(c, api.CodeInvalidParam)
+			return
+		}
+		zap.S().Error("admin_handler.Pass()", zap.Error(err))
+		api.FailWithErr(c, api.CodeSystemBusy, err.Error())
+		return
+	}
+
+	api.Success(c, "通过面试"+num)
 }
 
 // Out 在某一轮面试被淘汰
@@ -253,7 +281,28 @@ func Out(c *gin.Context) {
 
 // Enroll 在某一轮面试被录取
 func Enroll(c *gin.Context) {
+	var uidForm forms.MultiUIDForm
+	// uid 必填
+	if err := c.ShouldBindJSON(&uidForm); err != nil {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	orgid := claimInfo.OrganizationID
+	depid := claimInfo.DepartmentID
 
+	err := admin_handler.Enroll(&uidForm, orgid, depid)
+	if err != nil {
+		zap.S().Error("admin_handler.Enroll()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, "录取用户成功")
 }
 
 // GetAllInterviewees 部门获取报名自己部门的所有用户
@@ -319,8 +368,46 @@ func GetUninterview(c *gin.Context) {
 
 }
 
-// Getinterviewed 部门获取第n轮已面试成员
-func Getinterviewed(c *gin.Context) {
+// GetInterviewed 部门获取第n轮已面试成员
+func GetInterviewed(c *gin.Context) {
+	num, ok := c.Params.Get("num")
+	if !ok {
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	//获取 depid orgid
+	depid := claimInfo.DepartmentID
+	orgid := claimInfo.OrganizationID
+
+	// handler
+	interviewers, err := admin_handler.GetInterviewed(num, orgid, depid)
+	if err != nil {
+		if errors.Is(err, errInfo.ErrInvalidParam) {
+			api.Fail(c, api.CodeInvalidParam)
+			return
+		}
+		zap.S().Error("admin_handler.GetInterviewed()", zap.Error(err))
+		api.FailWithErr(c, api.CodeSystemBusy, err.Error())
+		return
+	}
+
+	var resp []*response.Interviewed
+
+	for _, item := range interviewers {
+		resp = append(resp, &response.Interviewed{
+			UID:  item.UID,
+			Name: item.Name,
+		})
+	}
+
+	api.Success(c, resp)
 
 }
 
