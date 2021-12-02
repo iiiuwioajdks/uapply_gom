@@ -32,3 +32,8 @@ type Interviewed struct {
 	UID  int32  `json:"uid"`
 	Name string `json:"name"`
 }
+
+type Enroll struct {
+	UID  int32  `json:"uid"`
+	Name string `json:"name"`
+}

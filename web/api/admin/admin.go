@@ -418,7 +418,32 @@ func GetInterviewed(c *gin.Context) {
 
 // GetUserEnroll 部门获取自己的通过部员
 func GetUserEnroll(c *gin.Context) {
+	// 获取claims
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	// 获取depid 和 orgid
+	depid := claimInfo.DepartmentID
+	orgid := claimInfo.OrganizationID
 
+	// handler
+	enrolls, err := admin_handler.GetUserEnroll(orgid, depid)
+	if err != nil {
+		zap.S().Error("admin_handler.GetUserEnroll()", zap.Error(err))
+		api.FailWithErr(c, api.CodeSystemBusy, err.Error())
+		return
+	}
+	var resp []*response.Enroll
+	for _, item := range enrolls {
+		resp = append(resp, &response.Enroll{
+			UID:  item.UID,
+			Name: item.Name,
+		})
+	}
+	api.Success(c, resp)
 }
 
 // GetUserInfo 获取本部门男女人数，报名人数信息

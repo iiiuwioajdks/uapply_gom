@@ -403,6 +403,19 @@ func GetInterviewed(num string, orgid int, depid int) ([]*models.UserInfo, error
 	return intervieweds, nil
 }
 
+// GetUserEnroll 部门获取自己的通过部员
+func GetUserEnroll(orgid int, depid int) ([]*models.UserInfo, error) {
+	db := global.DB
+
+	var enrolls []*models.UserInfo
+	sqlRaw := "SELECT ui.`uid`, name FROM user_register ur JOIN user_info ui ON ui.`uid` = ur.`uid` WHERE organization_id = ? AND department_id = ? AND final_status = 1"
+	result := db.Raw(sqlRaw, orgid, depid).Find(&enrolls)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return enrolls, nil
+
+}
 func Pass(num string, orgid int, depid int, uids forms.MultiUIDForm) error {
 	db := global.DB
 
