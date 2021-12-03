@@ -174,6 +174,7 @@ func SetTime(did int, t *forms.Time) error {
 	return res.Error
 }
 
+// GetUserInfo 获取本部门男女人数，报名人数信息
 func GetUserInfo(depid int, orgid int) (rsp *response.FMInfo, err error) {
 	db := global.DB
 	var users []*models.UserRegister
@@ -416,6 +417,34 @@ func GetUserEnroll(orgid int, depid int) ([]*models.UserInfo, error) {
 	return enrolls, nil
 
 }
+
+// AddExtraEnroll 直接添加一个部员
+func AddExtraEnroll(orgid int, depid int, aee *forms.EnrollForm) error {
+	db := global.DB
+	// 判断表UserWxInfo中是否存在uid
+	var uwf models.UserWxInfo
+	result := db.Model(&models.UserWxInfo{}).Select("uid").Where("uid = ?", aee.UID).First(&uwf)
+	// 不存在，返回错误
+	if result.RowsAffected == 0 {
+		return sql.ErrNoRows
+	} else if result.Error != nil {
+		return result.Error
+	}
+	// 如果部员表中不存在该用户，则存部员的信息，避免重复添加
+	var enrollModel models.UserEnroll
+	if result = db.Model(&models.UserEnroll{}).Where("organization_id = ? and department_id = ? and uid = ?", orgid, depid, aee.UID).First(&enrollModel); result.RowsAffected == 0 {
+		enrollModel.UID = int32(aee.UID)
+		enrollModel.UserName = aee.Name
+		enrollModel.OrganizationID = orgid
+		enrollModel.DepartmentID = depid
+		result = db.Create(&enrollModel)
+		if result.Error != nil {
+			return result.Error
+		}
+	}
+	return nil
+}
+
 func Pass(num string, orgid int, depid int, uids forms.MultiUIDForm) error {
 	db := global.DB
 

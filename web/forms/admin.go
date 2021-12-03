@@ -29,3 +29,8 @@ type Time struct {
 	Start int64 `binding:"required" json:"start"`
 	End   int64 `binding:"required" json:"end"`
 }
+
+type EnrollForm struct {
+	UID  int    `json:"uid" binding:"required"`
+	Name string `json:"name" binding:"required"`
+}

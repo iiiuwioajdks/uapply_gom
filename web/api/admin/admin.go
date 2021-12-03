@@ -22,7 +22,6 @@ func Create(c *gin.Context) {
 	// 绑定参数
 	var req forms.AdminReq
 	c.ShouldBindJSON(&req)
-
 	// 判断一下参数是否正确
 	if req.DepartmentName == "" || req.Account == "" || req.Password == "" {
 		api.Fail(c, api.CodeInvalidParam)
@@ -186,7 +185,35 @@ func Get(c *gin.Context) {
 
 // AddExtraEnroll 直接添加一个部员
 func AddExtraEnroll(c *gin.Context) {
-
+	// 获取uid 和 name
+	var aee forms.EnrollForm
+	if err := c.ShouldBindJSON(&aee); err != nil {
+		zap.S().Info(err)
+		api.Fail(c, api.CodeInvalidParam)
+		return
+	}
+	// 获取 claims
+	claim, ok := c.Get("claim")
+	if !ok {
+		api.Fail(c, api.CodeBadRequest)
+		return
+	}
+	claimInfo := claim.(*jwt2.Claims)
+	// 获取orgid和depid
+	orgid := claimInfo.OrganizationID
+	depid := claimInfo.DepartmentID
+	// handler
+	err := admin_handler.AddExtraEnroll(orgid, depid, &aee)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.FailWithErr(c, api.CodeUserNotExist, "此人未登录过小程序")
+			return
+		}
+		zap.S().Error("admin_handler.AddExtraEnroll()", zap.Error(err))
+		api.Fail(c, api.CodeSystemBusy)
+		return
+	}
+	api.Success(c, "添加成功")
 }
 
 // AddInterviewers 通过uid增加面试官，首先他应该是存在且部员
@@ -460,14 +487,13 @@ func GetUserInfo(c *gin.Context) {
 	orgid := claimInfo.OrganizationID
 	rsp, err := admin_handler.GetUserInfo(depid, orgid)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			api.FailWithErr(c, api.CodeUserNotExist, "本部门暂无人报名")
-			return
-		}
 		api.Fail(c, api.CodeSystemBusy)
 		return
 	}
-
+	if rsp.Sum == 0 {
+		api.FailWithErr(c, api.CodeUserNotExist, "本部门暂无人报名")
+		return
+	}
 	api.Success(c, rsp)
 }
 
