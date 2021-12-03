@@ -420,21 +420,17 @@ func Pass(num string, orgid int, depid int, uids forms.MultiUIDForm) error {
 	db := global.DB
 
 	if num == "1" {
-		for _, uid := range uids.UID {
-			sqlRaw := "update user_register set first_status = 3 where deleted_at IS NULL and department_id = ? and organization_id = ? and uid = ?"
-			result := db.Exec(sqlRaw, depid, orgid, uid)
-			if result.Error != nil {
-				return result.Error
-			}
+		sqlRaw := "update user_register set first_status = 3 where deleted_at IS NULL and department_id = ? and organization_id = ? and uid IN (?)"
+		result := db.Exec(sqlRaw, depid, orgid, uids.UID)
+		if result.Error != nil {
+			return result.Error
 		}
 
 	} else if num == "2" {
-		for _, uid := range uids.UID {
-			sqlRaw := "update user_register set second_status = 3 where deleted_at IS NULL and department_id = ? and organization_id = ? and uid = ? and first_status = 3"
-			result := db.Exec(sqlRaw, depid, orgid, uid)
-			if result.Error != nil {
-				return result.Error
-			}
+		sqlRaw := "update user_register set second_status = 3 where deleted_at IS NULL and department_id = ? and organization_id = ? and uid IN (?) and first_status = 3"
+		result := db.Exec(sqlRaw, depid, orgid, uids.UID)
+		if result.Error != nil {
+			return result.Error
 		}
 	} else {
 		return errInfo.ErrInvalidParam
